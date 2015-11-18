@@ -1,0 +1,35 @@
+Package: MetaCycle
+Type: Package
+Title: An integrated R package to evaluate periodicity in large scale
+        data
+Version: 1.1.0
+Authors@R: c(
+    person("Gang", "Wu",, email = "wggucas@gmail.com", role = c("aut", "cre")),
+    person("Ron", "Anafi",, email = "ranafi@gmail.com", role = c("aut", "ctb")),
+	person("John", "Hogenesch",, email = "hogenesch@gmail.com", role = c("aut", "ctb")),
+	person("Michael", "Hughes",, email = "michael.evan.hughes@gmail.com", role = c("aut", "ctb")),
+	person("Karl", "Kornacker",, email = "kornacker@midohio.twcbc.com", role = c("aut", "ctb"))
+    )
+Description: This package provides two functions-meta2d and meta3d for
+    detecting rhythmic signals from time-series datasets. For analyzing
+    time-series datasets without individual information, 'meta2d' is 
+    suggested, which could incorporates multiple methods from ARSER, 
+    JTK_CYCLE and Lomb-Scargle in the detection of interested rhythms. For 
+    analyzing time-series datasets with individual information, 'meta3d' is 
+    suggested, which takes use of any one of these three methods to analyze 
+	time-series data individual by individual and gives out integrated values 
+    based on analysis result of each individual.
+Depends: R (>= 3.0.2)
+Imports: gnm
+Suggests: knitr, rmarkdown, diagram, shape
+VignetteBuilder: knitr
+License: GPL (>= 2)
+LazyData: true
+Author: Gang Wu [aut, cre, cph],
+  Ron Anafi [aut, cph],
+  John Hogenesch [aut, cph],
+  Michael, Hughes [aut, cph],
+  Karl, Kornacker [aut, cph]
+Maintainer: Gang Wu <wggucas@gmail.com>
+NeedsCompilation: no
+Packaged: 2015-11-05 22:10:24 UTC; CirLab2
