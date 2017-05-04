@@ -25,30 +25,40 @@ ComputeLombScargle <- function(t, h, TestFrequencies, Nindependent)           ##
   # Nindepedent of the TestFrequencies are assumed to be independent.
   #----------------------
   stopifnot( length(t) == length(h) ) 
-  #modify 'if (length(t) > 0)' to 'if ( (length(t) > 0) && (var(h) != 0) )' for treating those rows with constant values (e.g. all values are 0); note: this was did this on May 4, 2017
-  if ( (length(t) > 0) & (var(h) != 0) )
-  {
-    Nyquist <- 1 / (2 * ( (max(t) - min(t) )/ length(t) ) )                   ##get the value of Nyquist(the highest frequency for which the unevenly spaced data may be evaluated)
-    hResidual    <- h - mean(h)                                               
-    SpectralPowerDensity <- rep(0, length(TestFrequencies))       
-    for (i in 1:length(TestFrequencies))
-    {
-      ##The values (eg. Omega, TwoOmegaT, Tau, OmegaTMinusTau, and SpectralPowerDensity) are calculated using the formula mentioned in the Lomb-Scargle paper.
-   	  Omega       <- 2*pi*TestFrequencies[i]                                  
-      TwoOmegaT   <- 2*Omega*t          
-      Tau         <- atan2( sum(sin(TwoOmegaT)) , sum(cos(TwoOmegaT)) ) / (2*Omega)            ##for positive arguments atan2(y, x) == atan(y/x)
-      OmegaTMinusTau <- Omega * (t - Tau)     
-      SpectralPowerDensity[i] <- (sum (hResidual * cos(OmegaTMinusTau))^2) / sum( cos(OmegaTMinusTau)^2 ) + 
+  #modify here considering the situation of 'var(h)=0' for treating those rows with constant values (e.g. all values are 0); note: this was did this on May 4, 2017
+  if (length(t) > 0) 
+  { 
+    if (var(h) != 0)  {
+        Nyquist <- 1 / (2 * ( (max(t) - min(t) )/ length(t) ) )                   ##get the value of Nyquist(the highest frequency for which the unevenly spaced data may be evaluated)
+        hResidual    <- h - mean(h)                                               
+        SpectralPowerDensity <- rep(0, length(TestFrequencies))       
+        for (i in 1:length(TestFrequencies))
+        {
+            ##The values (eg. Omega, TwoOmegaT, Tau, OmegaTMinusTau, and SpectralPowerDensity) are calculated using the formula mentioned in the Lomb-Scargle paper.
+            Omega       <- 2*pi*TestFrequencies[i]                                  
+            TwoOmegaT   <- 2*Omega*t          
+            Tau         <- atan2( sum(sin(TwoOmegaT)) , sum(cos(TwoOmegaT)) ) / (2*Omega)            ##for positive arguments atan2(y, x) == atan(y/x)
+            OmegaTMinusTau <- Omega * (t - Tau)     
+            SpectralPowerDensity[i] <- (sum (hResidual * cos(OmegaTMinusTau))^2) / sum( cos(OmegaTMinusTau)^2 ) + 
                                 (sum (hResidual * sin(OmegaTMinusTau))^2) / sum( sin(OmegaTMinusTau)^2 )
-    }
-    # The "normalized" spectral density refers to the variance term in the denominator. 
+          }
+        # The "normalized" spectral density refers to the variance term in the denominator. 
 	# With this term the SpectralPowerDensity has an exponential probability distribution with unit mean.
-    SpectralPowerDensity <- SpectralPowerDensity / ( 2 * var(h) )             
-    Probability <- 1 - (1-exp(-SpectralPowerDensity))^Nindependent            ##get the probability
-    PeakIndex    <- match(max(SpectralPowerDensity), SpectralPowerDensity)    ##get the the peak index
-    # Note:  Might merit more investigation when PeakIndex is the first point.
-    PeakPeriod <- 1 / TestFrequencies[PeakIndex]                              ##get the period length corresponding to the peak index with largest normalized spectral power density value
-    PeakPvalue <- Probability[PeakIndex]                                      ##get the corresponding p-value to the peak index with largest normalized spectral power density value
+        SpectralPowerDensity <- SpectralPowerDensity / ( 2 * var(h) )             
+        Probability <- 1 - (1-exp(-SpectralPowerDensity))^Nindependent            ##get the probability
+        PeakIndex    <- match(max(SpectralPowerDensity), SpectralPowerDensity)    ##get the the peak index
+        # Note:  Might merit more investigation when PeakIndex is the first point.
+        PeakPeriod <- 1 / TestFrequencies[PeakIndex]                              ##get the period length corresponding to the peak index with largest normalized spectral power density value
+        PeakPvalue <- Probability[PeakIndex]                                      ##get the corresponding p-value to the peak index with largest normalized spectral power density value
+    }  else  {
+	#all the values are same
+        Nyquist     <- NA
+        Probability <- 1.0
+        PeakIndex   <- NA
+        SpectralPowerDensity <- NA
+        PeakPeriod  <- NA
+        PeakPvalue  <- 1.0  
+    }
   } else {                                                                    
     # Time series has 0 points
     Nyquist     <- NA
