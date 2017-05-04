@@ -24,8 +24,9 @@ ComputeLombScargle <- function(t, h, TestFrequencies, Nindependent)           ##
   # SpectralPowerDensity will be evaluated at given TestFrequencies.
   # Nindepedent of the TestFrequencies are assumed to be independent.
   #----------------------
-  stopifnot( length(t) == length(h) )                                        
-  if (length(t) > 0)
+  stopifnot( length(t) == length(h) ) 
+  #modify 'if (length(t) > 0)' to 'if ( (length(t) > 0) && (var(h) != 0) )' for treating those rows with constant values (e.g. all values are 0); note: this was did this on May 4, 2017
+  if ( (length(t) > 0) && (var(h) != 0) )
   {
     Nyquist <- 1 / (2 * ( (max(t) - min(t) )/ length(t) ) )                   ##get the value of Nyquist(the highest frequency for which the unevenly spaced data may be evaluated)
     hResidual    <- h - mean(h)                                               
