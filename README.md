@@ -14,7 +14,7 @@ Use **devtools** to install this version from Github:
 ```r
 # install 'devtools' in R(>3.0.2)
 install.packages("devtools")
-# install MetaCycle version 1.0.0
+# install MetaCycle
 devtools::install_github('gangwug/MetaCycle')
 ```
 
