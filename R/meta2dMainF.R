@@ -419,7 +419,7 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
     {	non_integerInterval <- TRUE;	}
     if ( length( unique(diff(uni_timepoints)) ) > 1 )
     {	uneven_interval <- TRUE;	}
-    if ( (!all( !is.na(EXPM) )) | (!all( !is.nan(EXPM) )) )
+    if ( (any( is.na(EXPM) )) | (any( is.nan(EXPM) )) )
     {	MISSING_VALUE <- TRUE;	}
     if ( length(timepoints) != length(uni_timepoints) )
     {	WITH_REPLICATE <- TRUE;	}
