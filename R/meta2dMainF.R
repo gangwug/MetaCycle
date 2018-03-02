@@ -453,40 +453,32 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
     ####ARS (even sampling & without non-integer intervals & without missing values & without replicates)
     ####JTK (even sampling & without non-integer intervals)
     ####LS is not restricted in analyzing profiles in current design
-    ARS_OUTM <- JTK_OUTM <- LS_OUTM <- "None_output";
     if (analysisStrategy == "auto") {
         if ( (non_integerInterval) | (uneven_interval) ) {
             if (CIRM["LS"])
             {
-                LS_OUTM <- runLS(EXP_dataframe, timepoints, minper=MINPER, maxper=MAXPER, releaseNote);
                 outfile_tag["LS"] <- 1;
             }
         } else if ( (MISSING_VALUE) | (WITH_REPLICATE) ) {
             if (CIRM["JTK"])
             {
-                JTK_OUTM <- runJTK(EXP_dataframe, timepoints, minper=MINPER, maxper=MAXPER, releaseNote);
                 outfile_tag["JTK"] <- 1;
             }
             if (CIRM["LS"])
             {
-                LS_OUTM <- runLS(EXP_dataframe, timepoints, minper=MINPER, maxper=MAXPER, releaseNote);
                 outfile_tag["LS"] <- 1;
             }
         } else if ( (!non_integerInterval)&(!uneven_interval)&(!MISSING_VALUE)&(!WITH_REPLICATE) ) {
             if (CIRM["ARS"])
             {
-                ARS_OUTM <- runARS(EXP_dataframe, timepoints, minper=MINPER, maxper=MAXPER,
-				                   arsper=ARS_PER, arsmet=ARS_MET, releaseNote);
                 outfile_tag["ARS"] <- 1;
             }
             if (CIRM["JTK"])
             {
-                JTK_OUTM <- runJTK(EXP_dataframe, timepoints, minper=MINPER,maxper=MAXPER, releaseNote);
                 outfile_tag["JTK"] <- 1;
             }
             if (CIRM["LS"])
             {
-                LS_OUTM <- runLS(EXP_dataframe, timepoints, minper=MINPER, maxper=MAXPER, releaseNote);
                 outfile_tag["LS"] <- 1;
             }
         } else {
@@ -500,25 +492,45 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
         }
         if (CIRM["ARS"])
         {
-            ARS_OUTM <- runARS(EXP_dataframe, timepoints, minper=MINPER, maxper=MAXPER, 
-                               arsper=ARS_PER, arsmet=ARS_MET, releaseNote);
             outfile_tag["ARS"] <- 1;
         }
         if (CIRM["JTK"])
         {
-            JTK_OUTM <- runJTK(EXP_dataframe,timepoints,minper=MINPER,maxper=MAXPER,releaseNote);
             outfile_tag["JTK"] <- 1;
         }
         if (CIRM["LS"])
         {
-            LS_OUTM <- runLS(EXP_dataframe,timepoints,minper=MINPER,maxper=MAXPER,releaseNote);
             outfile_tag["LS"] <- 1;
         }
     } else {
         stop(c("Please check the parameter of 'analysisStrategy', ",
            "it should be set as 'auto' or 'selfUSE'.\n") );
     }
-
+    LS_RES <- mcparallel(runLS(EXP_dataframe, timepoints, minper=MINPER, maxper=MAXPER, releaseNote));
+    JTK_RES <- mcparallel(runJTK(EXP_dataframe, timepoints, minper=MINPER, maxper=MAXPER, releaseNote));
+    ARS_RES <- mcparallel(runARS(EXP_dataframe, timepoints, minper=MINPER, maxper=MAXPER,
+                       arsper=ARS_PER, arsmet=ARS_MET, releaseNote));
+    ls_id <- toString(LS_RES$pid);
+    jtk_id <- toString(JTK_RES$pid);
+    ars_id <- toString(ARS_RES$pid);
+    
+    jobs <- list();
+    i <- 1
+    
+    if (outfile_tag["ARS"]){
+      jobs[[i]] <- ARS_RES;
+      i <- i + 1; 
+    }
+    if (outfile_tag["JTK"]){
+      jobs[[i]] <- JTK_RES;
+      i <- i + 1;
+    }
+    if (outfile_tag["LS"]){
+      jobs[[i]] <- LS_RES;
+      i <- i + 1;
+    }
+    RESULT <- mccollect(jobs);
+    
     ####output analysis result from each selected method
     integration_header <- "CycID";
     tabletypeL <- list("sep"=FILE_SEP, "quote"=FILE_QUOTE2, "dec"=FILE_DEC);
@@ -529,7 +541,7 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
         ###output ARS analysis results
         if (outfile_tag["ARS"])
         {
-            outSigResultF(outM=ARS_OUTM, SIG_row=SIG_row, outRawData=outRawData,
+            outSigResultF(outM=RESULT[ars_id][[1]], SIG_row=SIG_row, outRawData=outRawData,
 			   EXPM=EXPM,ID_ORDER=ID_ORDER, methodName="ARS", outfile_name=outfile_name,
 			   features=c("fdr_BH", "pvalue"), tabletypeL=tabletypeL, outputFile);
             integration_header <- c(integration_header, paste("ARS", sig_header, sep="_"));
@@ -537,7 +549,7 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
         ###output JTK analysis results
         if (outfile_tag["JTK"])
         {
-            outSigResultF(outM=JTK_OUTM, SIG_row=SIG_row, outRawData=outRawData,
+            outSigResultF(outM=RESULT[jtk_id][[1]], SIG_row=SIG_row, outRawData=outRawData,
                EXPM=EXPM, ID_ORDER=ID_ORDER, methodName="JTK", outfile_name=outfile_name,
                features=c("BH.Q", "ADJ.P"),tabletypeL=tabletypeL, outputFile);
             integration_header <- c(integration_header, paste("JTK", sig_header, sep="_"));
@@ -545,7 +557,7 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
         ###output LS analysis results
         if (outfile_tag["LS"])
         {
-            outSigResultF(outM=LS_OUTM, SIG_row=SIG_row, outRawData=outRawData,
+            outSigResultF(outM=RESULT[ls_id][[1]], SIG_row=SIG_row, outRawData=outRawData,
                EXPM=EXPM, ID_ORDER=ID_ORDER, methodName="LS", outfile_name=outfile_name,
                features=c("BH.Q", "p"), tabletypeL=tabletypeL, outputFile);
             integration_header <- c(integration_header, paste("LS", sig_header, sep="_"));
@@ -556,7 +568,7 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
     AMPTIM <- timepoints;
     ###do not set 'integration_outM' as NULL here
     integration_outM <- "None_output";
-    outLIST <- list("ARS"=ARS_OUTM,"JTK"=JTK_OUTM,"LS"=LS_OUTM);
+    outLIST <- list("ARS"=RESULT[ars_id][[1]],"JTK"=RESULT[jtk_id][[1]],"LS"=RESULT[ls_id][[1]]);
     if (  INTEGRATION != "noIntegration" )
     {
         ###integration step depending on the number of used methods
