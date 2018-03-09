@@ -319,9 +319,9 @@ runARS <- function(indata,ARStime,minper=20,maxper=28, arsper=24, arsmet="", rel
   ##try 'apply()' in latter version, it may improve the Computational Efficiency
   if(para){
     data <- mcmapply(
-      function(x){
-        if (flagV[x]) {
-          d <- evaluate(eva.x=time_points,eva.y=dataM[x,],eva.delta=self.delta,eva.pID=line,T_start=start, T_end=end, T_default=arsper,arsmethods=arsmet);
+      function(line){
+        if (flagV[line]) {
+          d <- evaluate(eva.x=time_points,eva.y=dataM[line,],eva.delta=self.delta,eva.pID=line,T_start=start, T_end=end, T_default=arsper,arsmethods=arsmet);
         }else{
           d <- NULL
         }
