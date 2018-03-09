@@ -147,7 +147,7 @@ runLS <- function(indata,LStime,minper=20,maxper=28,releaseNote=TRUE, para = FAL
 	      LS$PeakPeriod, LS$PeakPvalue, LS$N, LS$Nindependent,  LS$Nyquist)
 	    }, 
 	    j,data, mc.cores = ncores)
-	  LSoutM <- rbind(LSoutM, t(rows))
+	  LSoutM <- t(rows)
 	}else{
 	  for (j in 1:length(outID))                                                     
 	  {
@@ -158,9 +158,9 @@ runLS <- function(indata,LStime,minper=20,maxper=28,releaseNote=TRUE, para = FAL
 	    LSoutM <- rbind(LSoutM,c(outID[j], LS$h.peak$maximum,LS$h.peak$objective, LS$PeakIndex,LS$PeakSPD, 
 	                             LS$PeakPeriod, LS$PeakPvalue, LS$N, LS$Nindependent,  LS$Nyquist));
 	  }
+	  LSoutM<-LSoutM[2:nrow(LSoutM),];
 	}
-	LSoutM<-LSoutM[2:nrow(LSoutM),];
-    colnames(LSoutM) <- header;
+  colnames(LSoutM) <- header;
 	bhq <- p.adjust(as.numeric(LSoutM[,"p"]),"BH");
 	LSoutM <- cbind(LSoutM,bhq);	       
 	dimnames(LSoutM)<-list("r"=1:length(outID),"c"=c(header,"BH.Q"));
