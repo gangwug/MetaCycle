@@ -105,7 +105,7 @@ ComputeAndPlotLombScargle <- function(t, h, TestFrequencies, Nindependent, para 
   return(LS)
 }
 ###======================================================================================================================================
-runLS <- function(indata,LStime,minper=20,maxper=28,releaseNote=TRUE, para = FALSE)
+runLS <- function(indata,LStime,minper=20,maxper=28,releaseNote=TRUE, para = FALSE, ncores = 1)
 {
 	if (releaseNote)  {
 		cat("The LS is in process from ", format(Sys.time(), "%X %m-%d-%Y"),"\n");
