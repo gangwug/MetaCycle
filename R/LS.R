@@ -148,6 +148,7 @@ runLS <- function(indata,LStime,minper=20,maxper=28,releaseNote=TRUE, para = FAL
 	    }, 
 	    j,data, mc.cores = ncores)
 	  LSoutM <- t(rows)
+	  rm(rows,data)
 	}else{
 	  for (j in 1:length(outID))                                                     
 	  {

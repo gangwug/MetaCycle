@@ -347,8 +347,6 @@ runARS <- function(indata,ARStime,minper=20,maxper=28, arsper=24, arsmet="", rel
       }, 
       data, idorder , mc.cores = ncores)
     
-    ars.outM <- t(rows)
-    
     pvalues <- mcmapply(
       function(d){
         if (!is.null(d)){
@@ -358,6 +356,10 @@ runARS <- function(indata,ARStime,minper=20,maxper=28, arsper=24, arsmet="", rel
         }
       },data,mc.cores = ncores
     )
+    
+    rm(data)
+    ars.outM <- t(rows)
+    rm(rows)
   }else{
     for (line in idorder )
     {
