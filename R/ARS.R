@@ -284,7 +284,7 @@ evaluate<-function(eva.x,eva.y,eva.delta,eva.pID="",T_start=20, T_end=28, T_defa
   return (eva.out);
 }
 ###======================================================================================================================================
-runARS <- function(indata,ARStime,minper=20,maxper=28, arsper=24, arsmet="", releaseNote=TRUE)
+runARS <- function(indata,ARStime,minper=20,maxper=28, arsper=24, arsmet="", releaseNote=TRUE, para = FALSE, ncores = 1)
 {
   #-----------------------
   if (releaseNote)  {
@@ -317,27 +317,70 @@ runARS <- function(indata,ARStime,minper=20,maxper=28, arsper=24, arsmet="", rel
   ori.op <- options();
   #-----------------------
   ##try 'apply()' in latter version, it may improve the Computational Efficiency
-  for (line in idorder )
-  {
-    if (flagV[line]) {
-		d=evaluate(eva.x=time_points,eva.y=dataM[line,],eva.delta=self.delta,eva.pID=line,T_start=start, T_end=end, T_default=arsper,arsmethods=arsmet);
-		ars.filter=0;
-		if (d$filter)
-		{ ars.filter=1; }
-		ars.period.num=length(d$period);
-		ars.period=paste(d$period,collapse=",");
-		ars.amplitude=paste(d$amplitude,collapse=",");
-		ars.phase=paste(d$phase,collapse=",");
-		ars.out=c(ars.filter,d$armethod,ars.period.num,ars.period,ars.amplitude,ars.phase,mean(dataM[line,]),d$R2,d$R2adj,d$coefvar,d$pvalue);
-		pvalues=c(pvalues,d$pvalue);
-	} else {
-		ars.out=c(rep(NA,4),0,NA,expMEAN[line],rep(NA,3),1);                           
-		pvalues=c(pvalues,1);                                #assign it as '1' insead of 'NA' for avoiding error report in 'pi0.est' step
-	}
-    ars.outM=rbind(ars.outM,ars.out);
+  if(para){
+    data <- mcmapply(
+      function(x){
+        if (flagV[x]) {
+          d <- evaluate(eva.x=time_points,eva.y=dataM[x,],eva.delta=self.delta,eva.pID=line,T_start=start, T_end=end, T_default=arsper,arsmethods=arsmet);
+        }else{
+          d <- NULL
+        }
+        d
+      },
+      idorder,
+      SIMPLIFY = FALSE, mc.cores = ncores )
+    rows <- mcmapply(	  
+      function(d,line){
+        if (!is.null(d)){
+          ars.filter=0;
+          if (d$filter)
+          { ars.filter=1; }
+          ars.period.num=length(d$period);
+          ars.period=paste(d$period,collapse=",");
+          ars.amplitude=paste(d$amplitude,collapse=",");
+          ars.phase=paste(d$phase,collapse=",");
+          r <- c(ars.filter,d$armethod,ars.period.num,ars.period,ars.amplitude,ars.phase,mean(dataM[line,]),d$R2,d$R2adj,d$coefvar,d$pvalue);
+        }else{
+          r <- c(rep(NA,4),0,NA,expMEAN[line],rep(NA,3),1);
+        }
+        r
+      }, 
+      data, idorder , mc.cores = ncores)
+    
+    ars.outM <- t(rows)
+    
+    pvalues <- mcmapply(
+      function(d){
+        if (!is.null(d)){
+          pvalue <- d$pvalue
+        }else{
+          pvalue <- 1
+        }
+      },data,mc.cores = ncores
+    )
+  }else{
+    for (line in idorder )
+    {
+      if (flagV[line]) {
+        d=evaluate(eva.x=time_points,eva.y=dataM[line,],eva.delta=self.delta,eva.pID=line,T_start=start, T_end=end, T_default=arsper,arsmethods=arsmet);
+        ars.filter=0;
+        if (d$filter)
+        { ars.filter=1; }
+        ars.period.num=length(d$period);
+        ars.period=paste(d$period,collapse=",");
+        ars.amplitude=paste(d$amplitude,collapse=",");
+        ars.phase=paste(d$phase,collapse=",");
+        ars.out=c(ars.filter,d$armethod,ars.period.num,ars.period,ars.amplitude,ars.phase,mean(dataM[line,]),d$R2,d$R2adj,d$coefvar,d$pvalue);
+        pvalues=c(pvalues,d$pvalue);
+      } else {
+        ars.out=c(rep(NA,4),0,NA,expMEAN[line],rep(NA,3),1);                           
+        pvalues=c(pvalues,1);                                #assign it as '1' insead of 'NA' for avoiding error report in 'pi0.est' step
+      }
+      ars.outM=rbind(ars.outM,ars.out);
+    }
+    pvalues=pvalues[2:length(pvalues)];
+    ars.outM=ars.outM[2:nrow(ars.outM),];
   }
-  pvalues=pvalues[2:length(pvalues)];
-  ars.outM=ars.outM[2:nrow(ars.outM),];
   options(ori.op);
   dimnames(ars.outM)[[1]]=idorder;
   names(pvalues)=idorder;
