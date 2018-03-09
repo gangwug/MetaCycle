@@ -146,7 +146,7 @@ runLS <- function(indata,LStime,minper=20,maxper=28,releaseNote=TRUE, para = FAL
 	      c(outID[j], LS$h.peak$maximum,LS$h.peak$objective, LS$PeakIndex,LS$PeakSPD, 
 	      LS$PeakPeriod, LS$PeakPvalue, LS$N, LS$Nindependent,  LS$Nyquist)
 	    }, 
-	    j,data, mc.cores = 8)
+	    j,data, mc.cores = ncores)
 	  LSoutM <- rbind(LSoutM, t(rows))
 	}else{
 	  for (j in 1:length(outID))                                                     
