@@ -318,17 +318,23 @@ runARS <- function(indata,ARStime,minper=20,maxper=28, arsper=24, arsmet="", rel
   #-----------------------
   ##try 'apply()' in latter version, it may improve the Computational Efficiency
   if(para){
+    flag <- mcmapply(function(line) flagV[line], idorder, mc.cores = ncores )
+    evay <- mcmapply(function(line) dataM[line,], idorder, SIMPLIFY = FALSE , mc.cores = ncores )
+    
     data <- mcmapply(
-      function(line){
-        if (flagV[line]) {
-          d <- evaluate(eva.x=time_points,eva.y=dataM[line,],eva.delta=self.delta,eva.pID=line,T_start=start, T_end=end, T_default=arsper,arsmethods=arsmet);
+      function(line,flag,evay, time, delta, start, end, arsper, arsmet){
+        if (flag) {
+          d <- evaluate(eva.x=time,eva.y=evay,eva.delta=delta,eva.pID=line,T_start=start, T_end=end, T_default=arsper,arsmethods=arsmet);
         }else{
           d <- NULL
         }
         d
       },
-      idorder,
+      idorder, flag, evay, self.delta, start, end, arsper, arsmet, MoreArgs = list(time = time_points),
       SIMPLIFY = FALSE, mc.cores = ncores )
+    
+    rm(flag, evay)
+    
     rows <- mcmapply(	  
       function(d,line){
         if (!is.null(d)){
@@ -356,7 +362,6 @@ runARS <- function(indata,ARStime,minper=20,maxper=28, arsper=24, arsmet="", rel
         }
       },data,mc.cores = ncores
     )
-    
     rm(data)
     ars.outM <- t(rows)
     rm(rows)
