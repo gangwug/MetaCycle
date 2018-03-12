@@ -21,7 +21,7 @@ Description: This package provides two functions-meta2d and meta3d for
     based on analysis result of each individual.
 Depends: R (>= 3.0.2)
 Imports: gnm
-Suggests: knitr, rmarkdown, diagram, shape
+Suggests: knitr, rmarkdown, diagram, shape, parallel
 VignetteBuilder: knitr
 License: GPL (>= 2)
 LazyData: true

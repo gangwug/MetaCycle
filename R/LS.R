@@ -74,8 +74,11 @@ ComputeLombScargle <- function(t, h, TestFrequencies, Nindependent)           ##
 				PeakPeriod=PeakPeriod,PeakPvalue=PeakPvalue,N=length(h),Nindependent=Nindependent) )
 }
 #-------------------------------------------------------------------------------------------
-ComputeAndPlotLombScargle <- function(t, h, TestFrequencies, Nindependent)    ##'ComputeAndPlotLombScargle' function is from Lomb-Scargle.R
-{
+ComputeAndPlotLombScargle <- function(t, h, TestFrequencies, Nindependent, para = FALSE, ncores = 1)    ##'ComputeAndPlotLombScargle' function is from Lomb-Scargle.R
+{ 
+  if (para){
+    h <- unlist(h)
+  }
   h <- h[ order(t) ]                                                          # order expression values in ascending time order   
   t <- t[ order(t) ]                                                          # order time points in ascending time order
   t2 <- t[!(is.na(h) | is.nan(h))]                                            # Remove missing (na) and not-a-number (NaN) expression values    
@@ -102,7 +105,7 @@ ComputeAndPlotLombScargle <- function(t, h, TestFrequencies, Nindependent)    ##
   return(LS)
 }
 ###======================================================================================================================================
-runLS <- function(indata,LStime,minper=20,maxper=28,releaseNote=TRUE)
+runLS <- function(indata,LStime,minper=20,maxper=28,releaseNote=TRUE, para = FALSE, ncores = 1)
 {
 	if (releaseNote)  {
 		cat("The LS is in process from ", format(Sys.time(), "%X %m-%d-%Y"),"\n");
@@ -133,17 +136,32 @@ runLS <- function(indata,LStime,minper=20,maxper=28,releaseNote=TRUE)
 	header<-c("CycID","PhaseShift","PhaseShiftHeight","PeakIndex",
 	          "PeakSPD","Period","p","N","Nindependent","Nyquist");
 	LSoutM<-header;
-	for (j in 1:length(outID))                                                     
-	{
-		if (.Platform$OS.type == "windows")                                       
-		{ flush.console(); }                                                       # display immediately in Windows 
-		Nindependent <- NHorneBaliunas(sum(!is.na(Expression[j,]))); 
-		LS <- ComputeAndPlotLombScargle(Time, Expression[j,], TestFrequencies, Nindependent);
-		LSoutM <- rbind(LSoutM,c(outID[j], LS$h.peak$maximum,LS$h.peak$objective, LS$PeakIndex,LS$PeakSPD, 
-							  LS$PeakPeriod, LS$PeakPvalue, LS$N, LS$Nindependent,  LS$Nyquist));
+	if (para){
+	  j <- 1:length(outID)
+	  Nindependent <- apply(Expression[j,], 1, function(x){NHorneBaliunas(sum(!is.na(x)))} )
+	  h <- split(Expression[j,], row(Expression[j,])) 
+	  data <- mcmapply(ComputeAndPlotLombScargle, h, TestFrequencies, Nindependent, TRUE, MoreArgs = list(t=Time), SIMPLIFY = FALSE, mc.cores = ncores )
+	  rows <- mcmapply(	  
+	    function(j,LS){
+	      c(outID[j], LS$h.peak$maximum,LS$h.peak$objective, LS$PeakIndex,LS$PeakSPD, 
+	      LS$PeakPeriod, LS$PeakPvalue, LS$N, LS$Nindependent,  LS$Nyquist)
+	    }, 
+	    j,data, mc.cores = ncores)
+	  LSoutM <- t(rows)
+	  rm(rows,data)
+	}else{
+	  for (j in 1:length(outID))                                                     
+	  {
+	    if (.Platform$OS.type == "windows")                                       
+	    { flush.console(); }                                                       # display immediately in Windows 
+	    Nindependent <- NHorneBaliunas(sum(!is.na(Expression[j,]))); 
+	    LS <- ComputeAndPlotLombScargle(Time, Expression[j,], TestFrequencies, Nindependent);
+	    LSoutM <- rbind(LSoutM,c(outID[j], LS$h.peak$maximum,LS$h.peak$objective, LS$PeakIndex,LS$PeakSPD, 
+	                             LS$PeakPeriod, LS$PeakPvalue, LS$N, LS$Nindependent,  LS$Nyquist));
+	  }
+	  LSoutM<-LSoutM[2:nrow(LSoutM),];
 	}
-	LSoutM<-LSoutM[2:nrow(LSoutM),];
-    colnames(LSoutM) <- header;
+  colnames(LSoutM) <- header;
 	bhq <- p.adjust(as.numeric(LSoutM[,"p"]),"BH");
 	LSoutM <- cbind(LSoutM,bhq);	       
 	dimnames(LSoutM)<-list("r"=1:length(outID),"c"=c(header,"BH.Q"));
