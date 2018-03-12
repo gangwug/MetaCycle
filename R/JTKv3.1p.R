@@ -4,7 +4,7 @@
 #### http://www.cs.cmu.edu/afs/cs/project/quake/public/papers/robust-arithmetic.ps
 #### This file has some modification aimed to easily run JTK_CYCLE in the package environment
 ####======================================================================================================================================
-runJTK <- function(indata,JTKtime,minper=20,maxper=28, releaseNote=TRUE)
+runJTK <- function(indata,JTKtime,minper=20,maxper=28, releaseNote=TRUE, para = FALSE, ncores = 1)
 {
 	##the internal functions
 	fast.two.sum <- function(a,b) {                   # known abs(a) >= abs(b)
@@ -390,10 +390,21 @@ runJTK <- function(indata,JTKtime,minper=20,maxper=28, releaseNote=TRUE)
 		jtk.init(periods,freq); 
 		flush.console();
 		##analyze input data
-		res <- apply(data,1,function(z) {
-		  outz <- jtkx(z);
-		  return(outz[1:4]);
-		})
+		if (para){
+		  data_rows <- mclapply(as.list(1:dim(data)[1]), function(x) {data[x[1],]}, mc.cores = ncores )
+		  res <- mcmapply(
+		    function(z) {
+		      outz <- jtkx(unlist(z));
+		      return(outz[1:4]);
+		    },data_rows, mc.cores = ncores
+		  )
+		  rm(data_rows);
+		}else{
+		  res <- apply(data,1,function(z) {
+		    outz <- jtkx(z);
+		    return(outz[1:4]);
+		  })
+		}
 		##return results
 		JTKoutM <- t(res);
 		bhq <- p.adjust(JTKoutM[,1],"BH");
