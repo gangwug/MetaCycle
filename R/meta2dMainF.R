@@ -119,6 +119,9 @@
 ##'   during the analysis will be released on the screen.
 ##' @param outSymbol a character string. A common prefix exists in the names of
 ##'   output files.
+##' @param parallelize logical. If \code{TRUE}, computation will be done in paralleL
+##' Doesn't work in windows machine 
+##' @param nCores a integer. Bigger or equal to one, number of cores to use 
 ##' @return
 ##' \code{meta2d} will write analysis results in different files under
 ##'   \code{outdir} if set \code{outputFile = TRUE}. Files named with
@@ -211,499 +214,488 @@
 ##' @importFrom gnm MPinv
 
 meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
-            maxper=28, cycMethod=c("ARS","JTK","LS"), analysisStrategy="auto",
-            outputFile=TRUE, outIntegration="both", adjustPhase="predictedPer",
-            combinePvalue="fisher",  weightedPerPha=FALSE,  ARSmle="auto",
-            ARSdefaultPer=24,outRawData=FALSE,releaseNote=TRUE,outSymbol="")
+                   maxper=28, cycMethod=c("ARS","JTK","LS"), analysisStrategy="auto",
+                   outputFile=TRUE, outIntegration="both", adjustPhase="predictedPer",
+                   combinePvalue="fisher",  weightedPerPha=FALSE,  ARSmle="auto",
+                   ARSdefaultPer=24,outRawData=FALSE,releaseNote=TRUE,outSymbol="", 
+                   parallelize=FALSE, nCores=1)
 {
-
-    ####start time
-    run_start=proc.time();
-
-    ####extract 'infile', 'outdir', 'minper', 'maxper',
-    ####set by users and store them as global variables
-    INFILE <- infile;
-    outdir2 <- unlist(strsplit(outdir,.Platform$file.sep));
-    OUTDIR <- paste(outdir2,collapse=.Platform$file.sep);
-    ###create the directory if it is not exist
-    if (! file.exists(OUTDIR) )
-    { dir.create(OUTDIR); }
-
-    ####check whether input parameters are correct
-    ###check 'minper' and 'maxper'
-    ###the maximum and minimum period length should be positive number,
-    ###and maximum period should not be smaller than minimum period length
-    if ( (!is.numeric(minper)) | (minper <= 0 ) )
-    {	stop("The 'minper' should be a positive numeric value.\n");	}
-    if ( (!is.numeric(maxper)) | (maxper <= 0 ) )
-    {	stop("The 'maxper' should be a positive numeric value.\n");	}
-    if (minper > maxper)
-    {	stop("The 'minper' should not be larger than 'maxper'.\n");	}
-    MINPER <- minper;
-    MAXPER <- maxper;
-    ###check whether the 'timepoints' is a effective numeric vector, or
-    ###the 'timepoints' information is stored in the first line of 'infile'
-    ###the 'checkTimeF' is in 'meta2dSubF.R'
-    ###NUMT is TRUE if 'timepoints' is a numeric vector
-    NUMT <- checkTimeF(timepoints);
-
-    ###check whether output integration results at the end of analysis
-    if ( (outIntegration == "both") | (outIntegration == "onlyIntegration") | (outIntegration == "noIntegration") )  {
-        INTEGRATION <- outIntegration;
-    } else {
-        stop(c("Please check the parameter of 'outIntegration', it should ",
-               "be set as 'both', 'onlyIntegration' or 'noIntegration'.\n") );
-    }
-    ###check defined period length used to adjust phase
-    if (adjustPhase == "predictedPer") {
-        ADPHA <- "PERIOD";
-    } else if (adjustPhase == "notAdjusted") {
-        ADPHA <- 0;
-    } else {
-        stop("The 'adjustPhase' should be set as 'predictedPer', or 'notAdjusted'.\n");
-    }
-    ###check which method is used to integrate multiple P-values
-    if ( (combinePvalue != "bonferroni")  &  (combinePvalue != "fisher") )
+  
+  ####start time
+  run_start=proc.time();
+  
+  ####extract 'infile', 'outdir', 'minper', 'maxper',
+  ####set by users and store them as global variables
+  INFILE <- infile;
+  outdir2 <- unlist(strsplit(outdir,.Platform$file.sep));
+  OUTDIR <- paste(outdir2,collapse=.Platform$file.sep);
+  ###create the directory if it is not exist
+  if (! file.exists(OUTDIR) )
+  { dir.create(OUTDIR); }
+  
+  ####check whether input parameters are correct
+  ###check 'minper' and 'maxper'
+  ###the maximum and minimum period length should be positive number,
+  ###and maximum period should not be smaller than minimum period length
+  if ( (!is.numeric(minper)) | (minper <= 0 ) )
+  {	stop("The 'minper' should be a positive numeric value.\n");	}
+  if ( (!is.numeric(maxper)) | (maxper <= 0 ) )
+  {	stop("The 'maxper' should be a positive numeric value.\n");	}
+  if (minper > maxper)
+  {	stop("The 'minper' should not be larger than 'maxper'.\n");	}
+  MINPER <- minper;
+  MAXPER <- maxper;
+  ###check whether the 'timepoints' is a effective numeric vector, or
+  ###the 'timepoints' information is stored in the first line of 'infile'
+  ###the 'checkTimeF' is in 'meta2dSubF.R'
+  ###NUMT is TRUE if 'timepoints' is a numeric vector
+  NUMT <- checkTimeF(timepoints);
+  
+  ###check whether output integration results at the end of analysis
+  if ( (outIntegration == "both") | (outIntegration == "onlyIntegration") | (outIntegration == "noIntegration") )  {
+    INTEGRATION <- outIntegration;
+  } else {
+    stop(c("Please check the parameter of 'outIntegration', it should ",
+           "be set as 'both', 'onlyIntegration' or 'noIntegration'.\n") );
+  }
+  ###check defined period length used to adjust phase
+  if (adjustPhase == "predictedPer") {
+    ADPHA <- "PERIOD";
+  } else if (adjustPhase == "notAdjusted") {
+    ADPHA <- 0;
+  } else {
+    stop("The 'adjustPhase' should be set as 'predictedPer', or 'notAdjusted'.\n");
+  }
+  ###check which method is used to integrate multiple P-values
+  if ( (combinePvalue != "bonferroni")  &  (combinePvalue != "fisher") )
+  {
+    stop(c("The 'combinePvalue' should be set as 'bonferroni', or 'fisher'.\n") );
+  }
+  ###check 'weightedPerPha'
+  if ( !is.logical(weightedPerPha) )
+  {
+    stop("The 'weightedPerPha' should be set as a logical value (TRUE or FALSE).\n");
+  }
+  ###check 'outRawData'
+  if ( !is.logical(outRawData) )
+  {
+    stop("The 'outRawData' should be set as a logical value (TRUE or FALSE).\n");
+  }
+  
+  ####extract field separator character(FILE_SEP), set of quoting
+  ####characters(FILE_QUOTE), the character used for decimal points(FILE_DEC)
+  ###the 'getFileSignF()' is in 'metaSubF.R'
+  file_sign <- getFileSignF(filestyle);
+  FILE_SEP <- file_sign$sep;
+  FILE_QUOTE <- file_sign$quote;
+  FILE_DEC <- file_sign$dec;
+  FILE_QUOTE2 <- file_sign$quote2;
+  
+  ####extract user-defined method for analyzing expression profiles
+  CIRM <- rep(FALSE,3);
+  names(CIRM) <- c("ARS","JTK","LS");
+  cycMethod <- unique(cycMethod);
+  for (i in 1:length(cycMethod))
+  {
+    if ( (cycMethod[i] != "ARS") & (cycMethod[i] != "JTK") & (cycMethod[i] != "LS") )
     {
-        stop(c("The 'combinePvalue' should be set as 'bonferroni', or 'fisher'.\n") );
+      stop(c("Please check 'cycMethod', one or multiple methods ",
+             "could only be selected from 'ARS', 'JTK' and 'LS'.\n") );
     }
-    ###check 'weightedPerPha'
-    if ( !is.logical(weightedPerPha) )
+  }
+  CIRM[cycMethod] <- TRUE;
+  
+  ####read time-series values and extract row and column's name
+  EXP_dataframe <- ID_ORDER <- LIB_ID <- NULL;
+  if (NUMT)
+  {
+    EXP_dataframe <- read.table(INFILE, header=TRUE, sep=FILE_SEP,
+                                quote=FILE_QUOTE, dec=FILE_DEC, stringsAsFactors=FALSE);
+    ID_ORDER <- dimnames(EXP_dataframe)[[1]];
+    LIB_ID <- dimnames(EXP_dataframe)[[2]];
+  }  else  {
+    EXP_dataframe <- read.table(INFILE, header=FALSE, sep=FILE_SEP,
+                                quote=FILE_QUOTE, dec=FILE_DEC, stringsAsFactors=FALSE);
+    dimnames(EXP_dataframe)[[2]] <- as.character(EXP_dataframe[1,]);
+    timepoints <- as.numeric(EXP_dataframe[1, -1]);
+    if ( any(is.na(timepoints)) | any(is.nan(timepoints)) )
     {
-        stop("The 'weightedPerPha' should be set as a logical value (TRUE or FALSE).\n");
+      stop(c("Please replace non-numeric character or 'NA' with numeric ",
+             "value (time points) in the first line of 'infile'.\n") );
     }
-    ###check 'outRawData'
-    if ( !is.logical(outRawData) )
+    if (min(timepoints) < 0 )
     {
-        stop("The 'outRawData' should be set as a logical value (TRUE or FALSE).\n");
+      stop("The minimal time points value should not be a negative value.\n");
     }
-
-    ####extract field separator character(FILE_SEP), set of quoting
-    ####characters(FILE_QUOTE), the character used for decimal points(FILE_DEC)
-    ###the 'getFileSignF()' is in 'metaSubF.R'
-    file_sign <- getFileSignF(filestyle);
-    FILE_SEP <- file_sign$sep;
-    FILE_QUOTE <- file_sign$quote;
-    FILE_DEC <- file_sign$dec;
-    FILE_QUOTE2 <- file_sign$quote2;
-
-    ####extract user-defined method for analyzing expression profiles
-    CIRM <- rep(FALSE,3);
-    names(CIRM) <- c("ARS","JTK","LS");
-    cycMethod <- unique(cycMethod);
-    for (i in 1:length(cycMethod))
-    {
-        if ( (cycMethod[i] != "ARS") & (cycMethod[i] != "JTK") & (cycMethod[i] != "LS") )
-        {
-            stop(c("Please check 'cycMethod', one or multiple methods ",
-               "could only be selected from 'ARS', 'JTK' and 'LS'.\n") );
-        }
-    }
-    CIRM[cycMethod] <- TRUE;
-
-    ####read time-series values and extract row and column's name
-    EXP_dataframe <- ID_ORDER <- LIB_ID <- NULL;
-    if (NUMT)
-    {
-        EXP_dataframe <- read.table(INFILE, header=TRUE, sep=FILE_SEP,
-		                            quote=FILE_QUOTE, dec=FILE_DEC, stringsAsFactors=FALSE);
-        ID_ORDER <- dimnames(EXP_dataframe)[[1]];
-        LIB_ID <- dimnames(EXP_dataframe)[[2]];
-    }  else  {
-        EXP_dataframe <- read.table(INFILE, header=FALSE, sep=FILE_SEP,
-		                            quote=FILE_QUOTE, dec=FILE_DEC, stringsAsFactors=FALSE);
-        dimnames(EXP_dataframe)[[2]] <- as.character(EXP_dataframe[1,]);
-        timepoints <- as.numeric(EXP_dataframe[1, -1]);
-        if ( any(is.na(timepoints)) | any(is.nan(timepoints)) )
-        {
-            stop(c("Please replace non-numeric character or 'NA' with numeric ",
-               "value (time points) in the first line of 'infile'.\n") );
-        }
-        if (min(timepoints) < 0 )
-        {
-            stop("The minimal time points value should not be a negative value.\n");
-        }
-        EXP_dataframe <- EXP_dataframe[-1,];
-        dimnames(EXP_dataframe)[[1]] <- 1:nrow(EXP_dataframe);
-        ID_ORDER <- dimnames(EXP_dataframe)[[1]];
-        LIB_ID <- dimnames(EXP_dataframe)[[2]];
-    }
-    ###check whether correctly read-in the data
-    if (ncol(EXP_dataframe) == 1)
-    {
-        stop(c("The 'infile' is stored in a one-column dataframe, ",
+    EXP_dataframe <- EXP_dataframe[-1,];
+    dimnames(EXP_dataframe)[[1]] <- 1:nrow(EXP_dataframe);
+    ID_ORDER <- dimnames(EXP_dataframe)[[1]];
+    LIB_ID <- dimnames(EXP_dataframe)[[2]];
+  }
+  ###check whether correctly read-in the data
+  if (ncol(EXP_dataframe) == 1)
+  {
+    stop(c("The 'infile' is stored in a one-column dataframe, ",
            "please check whether 'filestyle' is correctly set.\n") );
-    }
-    if (nrow(EXP_dataframe) == 0)
-    {
-        stop(c("The 'infile' contains only one line which is taken ",
+  }
+  if (nrow(EXP_dataframe) == 0)
+  {
+    stop(c("The 'infile' contains only one line which is taken ",
            "as column names, please check the input file.\n") );
-    }
-    if ( length(timepoints) != ( ncol(EXP_dataframe) - 1) )
-    {
-        stop(c("Please check 'infile' or 'timepoints', the column number ",
+  }
+  if ( length(timepoints) != ( ncol(EXP_dataframe) - 1) )
+  {
+    stop(c("Please check 'infile' or 'timepoints', the column number ",
            "of 'infile' should be one more than the length of time points. ",
            "See the example data in this package.\n") );
+  }
+  ###check whether contain only one row data
+  SIG_row <- FALSE;
+  if (nrow(EXP_dataframe) == 1)
+  {
+    EXP_dataframe <- rbind(EXP_dataframe, EXP_dataframe);
+    dimnames(EXP_dataframe)[[1]] <- c("1","2");
+    ID_ORDER <- c("1","2");
+    SIG_row <- TRUE;
+  }
+  ###store names of each row in 'OUT_ID'
+  OUT_ID <- as.character(EXP_dataframe[,1]);
+  names(OUT_ID) <- ID_ORDER;
+  
+  ####sort and check time points
+  ####re-arrange column order of input data according time order
+  ###sort 'timepoints' value with increasing order
+  names(timepoints) <- 1:length(timepoints);
+  timepoints <- sort(timepoints);
+  time_orderIndex <- as.numeric(names(timepoints));
+  ###re-arrange data according to ordered time points
+  EXPM <- data.matrix(EXP_dataframe[,-1]);
+  dimnames(EXPM)[[1]] <- ID_ORDER;
+  EXPM <- EXPM[,time_orderIndex];
+  expm_ID <- LIB_ID[-1];
+  expm_ID <- expm_ID[time_orderIndex];
+  dimnames(EXPM)[[2]] <- expm_ID;
+  ###transfer ordered data to 'EXP_dataframe'
+  EXP_dataframe[ID_ORDER, 2:ncol(EXP_dataframe)] <- EXPM[ID_ORDER,];
+  LIB_ID <- c(LIB_ID[1], expm_ID);
+  dimnames(EXP_dataframe)[[2]] <- LIB_ID;
+  
+  ###check number of unique time points
+  ###uni_timepoints should be ordered
+  uni_timepoints <- unique(timepoints);
+  if ( length(uni_timepoints) < 4 )
+  {
+    if (releaseNote) {
+      cat(c("Warning: the number of time points is too small, ",
+            "it may be not a good choice to analyze this expression file ",
+            "with 'ARS','JTK' or 'LS'. If possible, please carefully ",
+            "check the output results and try other useful methods.\n") );
     }
-    ###check whether contain only one row data
-    SIG_row <- FALSE;
-    if (nrow(EXP_dataframe) == 1)
-    {
-        EXP_dataframe <- rbind(EXP_dataframe, EXP_dataframe);
-        dimnames(EXP_dataframe)[[1]] <- c("1","2");
-        ID_ORDER <- c("1","2");
-        SIG_row <- TRUE;
+  }
+  ###get the initial time points for JTK
+  START_TIME <- uni_timepoints[1];
+  
+  ####check 'ARSmle' and 'ARSdefaultPer' if 'ARS' is selected
+  if (CIRM["ARS"])
+  {
+    ###the 'checkARSdefaultPerF()' is in 'meta2dSubF.R'
+    ARS_PER <- checkARSdefaulterPerF(ARSdefaultPer, minper=MINPER, maxper=MAXPER);
+    ###If ARSmle == "auto", when total number of time points is >= 24, 'mle'
+    ###will not be used for estimating AR coefficients('mle' is too slow)
+    if ( (ARSmle == "auto") & ( length(uni_timepoints) < 24) ) {
+      ARS_MET <- c("yule-walker","mle","burg");
+    } else if ( (ARSmle == "auto") & (length(uni_timepoints) >= 24) ) {
+      ARS_MET <- c("yule-walker","burg");
+    } else if (ARSmle == "mle") {
+      ARS_MET <- c("yule-walker","mle","burg");
+    } else if (ARSmle == "nomle") {
+      ARS_MET <- c("yule-walker","burg");
+    } else {
+      stop(c("Please check the parameter of 'ARSmle', it ",
+             "should be set as 'auto', 'mle' or 'nomle'.\n") );
     }
-    ###store names of each row in 'OUT_ID'
-    OUT_ID <- as.character(EXP_dataframe[,1]);
-    names(OUT_ID) <- ID_ORDER;
-
-    ####sort and check time points
-    ####re-arrange column order of input data according time order
-    ###sort 'timepoints' value with increasing order
-    names(timepoints) <- 1:length(timepoints);
-    timepoints <- sort(timepoints);
-    time_orderIndex <- as.numeric(names(timepoints));
-    ###re-arrange data according to ordered time points
-    EXPM <- data.matrix(EXP_dataframe[,-1]);
-    dimnames(EXPM)[[1]] <- ID_ORDER;
-    EXPM <- EXPM[,time_orderIndex];
-    expm_ID <- LIB_ID[-1];
-    expm_ID <- expm_ID[time_orderIndex];
-    dimnames(EXPM)[[2]] <- expm_ID;
-    ###transfer ordered data to 'EXP_dataframe'
-    EXP_dataframe[ID_ORDER, 2:ncol(EXP_dataframe)] <- EXPM[ID_ORDER,];
-    LIB_ID <- c(LIB_ID[1], expm_ID);
-    dimnames(EXP_dataframe)[[2]] <- LIB_ID;
-
-    ###check number of unique time points
-    ###uni_timepoints should be ordered
-    uni_timepoints <- unique(timepoints);
-    if ( length(uni_timepoints) < 4 )
-    {
-        if (releaseNote) {
-			    cat(c("Warning: the number of time points is too small, ",
-			    "it may be not a good choice to analyze this expression file ",
-			    "with 'ARS','JTK' or 'LS'. If possible, please carefully ",
-			    "check the output results and try other useful methods.\n") );
-		    }
-    }
-    ###get the initial time points for JTK
-    START_TIME <- uni_timepoints[1];
-
-    ####check 'ARSmle' and 'ARSdefaultPer' if 'ARS' is selected
-    if (CIRM["ARS"])
-    {
-		    ###the 'checkARSdefaultPerF()' is in 'meta2dSubF.R'
-		    ARS_PER <- checkARSdefaulterPerF(ARSdefaultPer, minper=MINPER, maxper=MAXPER);
-		    ###If ARSmle == "auto", when total number of time points is >= 24, 'mle'
-		    ###will not be used for estimating AR coefficients('mle' is too slow)
-		    if ( (ARSmle == "auto") & ( length(uni_timepoints) < 24) ) {
-            ARS_MET <- c("yule-walker","mle","burg");
-		    } else if ( (ARSmle == "auto") & (length(uni_timepoints) >= 24) ) {
-			      ARS_MET <- c("yule-walker","burg");
-		    } else if (ARSmle == "mle") {
-			      ARS_MET <- c("yule-walker","mle","burg");
-		    } else if (ARSmle == "nomle") {
-			      ARS_MET <- c("yule-walker","burg");
-		    } else {
-			      stop(c("Please check the parameter of 'ARSmle', it ",
-			       "should be set as 'auto', 'mle' or 'nomle'.\n") );
-		    }
-	  }
-
-    ####extract key features of input data, including with/without non-integer interval,
-    ####even/uneven sampling, with/without missing values, with/without replicates
-    MISSING_VALUE <- WITH_REPLICATE <- non_integerInterval <- uneven_interval <- FALSE;
-    if ( !all( round(diff(uni_timepoints)) == diff(uni_timepoints) ) )
-    {	non_integerInterval <- TRUE;	}
-    if ( length( unique(diff(uni_timepoints)) ) > 1 )
-    {	uneven_interval <- TRUE;	}
-    if ( (any( is.na(EXPM) )) | (any( is.nan(EXPM) )) )
-    {	MISSING_VALUE <- TRUE;	}
-    if ( length(timepoints) != length(uni_timepoints) )
-    {	WITH_REPLICATE <- TRUE;	}
-
-    ####set the output file name
-    filename <- unlist(strsplit(INFILE,.Platform$file.sep,fixed=TRUE));
+  }
+  
+  ####extract key features of input data, including with/without non-integer interval,
+  ####even/uneven sampling, with/without missing values, with/without replicates
+  MISSING_VALUE <- WITH_REPLICATE <- non_integerInterval <- uneven_interval <- FALSE;
+  if ( !all( round(diff(uni_timepoints)) == diff(uni_timepoints) ) )
+  {	non_integerInterval <- TRUE;	}
+  if ( length( unique(diff(uni_timepoints)) ) > 1 )
+  {	uneven_interval <- TRUE;	}
+  if ( (!all( !is.na(EXPM) )) | (!all( !is.nan(EXPM) )) )
+  {	MISSING_VALUE <- TRUE;	}
+  if ( length(timepoints) != length(uni_timepoints) )
+  {	WITH_REPLICATE <- TRUE;	}
+  
+  ####set the output file name
+  filename <- unlist(strsplit(INFILE,.Platform$file.sep,fixed=TRUE));
+  filename <- filename[length(filename)];
+  if ( grepl("\\", filename, fixed=TRUE) )
+  {
+    filename <- unlist(strsplit(INFILE,"\\",fixed=TRUE));
     filename <- filename[length(filename)];
-    if ( grepl("\\", filename, fixed=TRUE) )
-    {
-        filename <- unlist(strsplit(INFILE,"\\",fixed=TRUE));
-        filename <- filename[length(filename)];
-    }  else if ( grepl("//", filename, fixed=TRUE) )  {
-        filename <- unlist(strsplit(INFILE,"//",fixed=TRUE));
-        filename <- filename[length(filename)];
+  }  else if ( grepl("//", filename, fixed=TRUE) )  {
+    filename <- unlist(strsplit(INFILE,"//",fixed=TRUE));
+    filename <- filename[length(filename)];
+  }
+  if (length(outSymbol) > 1)
+  {
+    outSymbol <- as.character(outSymbol);
+    outSymbol <- paste(outSymbol, collapse="");
+  }
+  ars_outname <- paste(OUTDIR, .Platform$file.sep, outSymbol, "ARSresult_", filename,sep="");
+  jtk_outname <- paste(OUTDIR, .Platform$file.sep, outSymbol, "JTKresult_", filename,sep="");
+  ls_outname <- paste(OUTDIR, .Platform$file.sep,  outSymbol, "LSresult_", filename,sep="");
+  outfile_name <- c(ars_outname, jtk_outname, ls_outname);
+  names(outfile_name) <- c("ARS","JTK","LS");
+  outfile_tag <- rep(0,3);
+  names(outfile_tag) <- c("ARS","JTK","LS");
+  integ_outname <- paste(OUTDIR, .Platform$file.sep, outSymbol, "meta2d_", filename,sep="");
+  
+  ####select proper method to analyze profiles depending on sampling pattern
+  ####ARS (even sampling & without non-integer intervals & without missing values & without replicates)
+  ####JTK (even sampling & without non-integer intervals)
+  ####LS is not restricted in analyzing profiles in current design
+  ARS_OUTM <- JTK_OUTM <- LS_OUTM <- "None_output";
+  if (analysisStrategy == "auto") {
+    if ( (non_integerInterval) | (uneven_interval) ) {
+      if (CIRM["LS"])
+      {
+        LS_OUTM <- runLS(EXP_dataframe, timepoints, minper=MINPER, maxper=MAXPER, releaseNote, para = parallelize, ncores = nCores);
+        outfile_tag["LS"] <- 1;
+      }
+    } else if ( (MISSING_VALUE) | (WITH_REPLICATE) ) {
+      if (CIRM["JTK"])
+      {
+        JTK_OUTM <- runJTK(EXP_dataframe, timepoints, minper=MINPER, maxper=MAXPER, releaseNote);
+        outfile_tag["JTK"] <- 1;
+      }
+      if (CIRM["LS"])
+      {
+        LS_OUTM <- runLS(EXP_dataframe, timepoints, minper=MINPER, maxper=MAXPER, releaseNote,para = parallelize, ncores = nCores);
+        outfile_tag["LS"] <- 1;
+      }
+    } else if ( (!non_integerInterval)&(!uneven_interval)&(!MISSING_VALUE)&(!WITH_REPLICATE) ) {
+      if (CIRM["ARS"])
+      {
+        ARS_OUTM <- runARS(EXP_dataframe, timepoints, minper=MINPER, maxper=MAXPER,
+                           arsper=ARS_PER, arsmet=ARS_MET, releaseNote,para = parallelize, ncores = nCores);
+        outfile_tag["ARS"] <- 1;
+      }
+      if (CIRM["JTK"])
+      {
+        JTK_OUTM <- runJTK(EXP_dataframe, timepoints, minper=MINPER,maxper=MAXPER, releaseNote);
+        outfile_tag["JTK"] <- 1;
+      }
+      if (CIRM["LS"])
+      {
+        LS_OUTM <- runLS(EXP_dataframe, timepoints, minper=MINPER, maxper=MAXPER, releaseNote,para = parallelize, ncores = nCores);
+        outfile_tag["LS"] <- 1;
+      }
+    } else {
+      stop("Please contact the author of this package for this bug.\n");
     }
-    if (length(outSymbol) > 1)
-    {
-        outSymbol <- as.character(outSymbol);
-        outSymbol <- paste(outSymbol, collapse="");
-    }
-    ars_outname <- paste(OUTDIR, .Platform$file.sep, outSymbol, "ARSresult_", filename,sep="");
-    jtk_outname <- paste(OUTDIR, .Platform$file.sep, outSymbol, "JTKresult_", filename,sep="");
-    ls_outname <- paste(OUTDIR, .Platform$file.sep,  outSymbol, "LSresult_", filename,sep="");
-    outfile_name <- c(ars_outname, jtk_outname, ls_outname);
-    names(outfile_name) <- c("ARS","JTK","LS");
-    outfile_tag <- rep(0,3);
-    names(outfile_tag) <- c("ARS","JTK","LS");
-    integ_outname <- paste(OUTDIR, .Platform$file.sep, outSymbol, "meta2d_", filename,sep="");
-
-    ####select proper method to analyze profiles depending on sampling pattern
-    ####ARS (even sampling & without non-integer intervals & without missing values & without replicates)
-    ####JTK (even sampling & without non-integer intervals)
-    ####LS is not restricted in analyzing profiles in current design
-    if (analysisStrategy == "auto") {
-        if ( (non_integerInterval) | (uneven_interval) ) {
-            if (CIRM["LS"])
-            {
-                outfile_tag["LS"] <- 1;
-            }
-        } else if ( (MISSING_VALUE) | (WITH_REPLICATE) ) {
-            if (CIRM["JTK"])
-            {
-                outfile_tag["JTK"] <- 1;
-            }
-            if (CIRM["LS"])
-            {
-                outfile_tag["LS"] <- 1;
-            }
-        } else if ( (!non_integerInterval)&(!uneven_interval)&(!MISSING_VALUE)&(!WITH_REPLICATE) ) {
-            if (CIRM["ARS"])
-            {
-                outfile_tag["ARS"] <- 1;
-            }
-            if (CIRM["JTK"])
-            {
-                outfile_tag["JTK"] <- 1;
-            }
-            if (CIRM["LS"])
-            {
-                outfile_tag["LS"] <- 1;
-            }
-        } else {
-            stop("Please contact the author of this package for this bug.\n");
-        }
-    } else if (analysisStrategy == "selfUSE") {
-        if (releaseNote) {
-			     cat(c("Warning: 'analysisStrategy' is set as 'selfUSE', please be sure ",
+  } else if (analysisStrategy == "selfUSE") {
+    if (releaseNote) {
+      cat(c("Warning: 'analysisStrategy' is set as 'selfUSE', please be sure ",
             "that the 'infile' could be analyzed by all selected methods in ",
             "'cycMethod'. If not, please set 'analysisStrategy' as 'auto'.\n") );
-        }
-        if (CIRM["ARS"])
-        {
-            outfile_tag["ARS"] <- 1;
-        }
-        if (CIRM["JTK"])
-        {
-            outfile_tag["JTK"] <- 1;
-        }
-        if (CIRM["LS"])
-        {
-            outfile_tag["LS"] <- 1;
-        }
-    } else {
-        stop(c("Please check the parameter of 'analysisStrategy', ",
+    }
+    if (CIRM["ARS"])
+    {
+      ARS_OUTM <- runARS(EXP_dataframe, timepoints, minper=MINPER, maxper=MAXPER, 
+                         arsper=ARS_PER, arsmet=ARS_MET, releaseNote,para = parallelize, ncores = nCores);
+      outfile_tag["ARS"] <- 1;
+    }
+    if (CIRM["JTK"])
+    {
+      JTK_OUTM <- runJTK(EXP_dataframe,timepoints,minper=MINPER,maxper=MAXPER,releaseNote);
+      outfile_tag["JTK"] <- 1;
+    }
+    if (CIRM["LS"])
+    {
+      LS_OUTM <- runLS(EXP_dataframe,timepoints,minper=MINPER,maxper=MAXPER,releaseNote,para = parallelize, ncores = nCores);
+      outfile_tag["LS"] <- 1;
+    }
+  } else {
+    stop(c("Please check the parameter of 'analysisStrategy', ",
            "it should be set as 'auto' or 'selfUSE'.\n") );
-    }
-    LS_RES <- mcparallel(runLS(EXP_dataframe, timepoints, minper=MINPER, maxper=MAXPER, releaseNote));
-    JTK_RES <- mcparallel(runJTK(EXP_dataframe, timepoints, minper=MINPER, maxper=MAXPER, releaseNote));
-    ARS_RES <- mcparallel(runARS(EXP_dataframe, timepoints, minper=MINPER, maxper=MAXPER,
-                       arsper=ARS_PER, arsmet=ARS_MET, releaseNote));
-    ls_id <- toString(LS_RES$pid);
-    jtk_id <- toString(JTK_RES$pid);
-    ars_id <- toString(ARS_RES$pid);
-    
-    jobs <- list();
-    i <- 1
-    
-    if (outfile_tag["ARS"]){
-      jobs[[i]] <- ARS_RES;
-      i <- i + 1; 
-    }
-    if (outfile_tag["JTK"]){
-      jobs[[i]] <- JTK_RES;
-      i <- i + 1;
-    }
-    if (outfile_tag["LS"]){
-      jobs[[i]] <- LS_RES;
-      i <- i + 1;
-    }
-    RESULT <- mccollect(jobs);
-    
-    ####output analysis result from each selected method
-    integration_header <- "CycID";
-    tabletypeL <- list("sep"=FILE_SEP, "quote"=FILE_QUOTE2, "dec"=FILE_DEC);
-    ###common column names of each method
-    sig_header <- c("pvalue","BH.Q","period","adjphase","amplitude");
-    if (INTEGRATION != "onlyIntegration")
+  }
+  
+  ####output analysis result from each selected method
+  integration_header <- "CycID";
+  tabletypeL <- list("sep"=FILE_SEP, "quote"=FILE_QUOTE2, "dec"=FILE_DEC);
+  ###common column names of each method
+  sig_header <- c("pvalue","BH.Q","period","adjphase","amplitude");
+  if (INTEGRATION != "onlyIntegration")
+  {
+    ###output ARS analysis results
+    if (outfile_tag["ARS"])
     {
-        ###output ARS analysis results
-        if (outfile_tag["ARS"])
-        {
-            outSigResultF(outM=RESULT[ars_id][[1]], SIG_row=SIG_row, outRawData=outRawData,
-			   EXPM=EXPM,ID_ORDER=ID_ORDER, methodName="ARS", outfile_name=outfile_name,
-			   features=c("fdr_BH", "pvalue"), tabletypeL=tabletypeL, outputFile);
-            integration_header <- c(integration_header, paste("ARS", sig_header, sep="_"));
-        }
-        ###output JTK analysis results
-        if (outfile_tag["JTK"])
-        {
-            outSigResultF(outM=RESULT[jtk_id][[1]], SIG_row=SIG_row, outRawData=outRawData,
-               EXPM=EXPM, ID_ORDER=ID_ORDER, methodName="JTK", outfile_name=outfile_name,
-               features=c("BH.Q", "ADJ.P"),tabletypeL=tabletypeL, outputFile);
-            integration_header <- c(integration_header, paste("JTK", sig_header, sep="_"));
-        }
-        ###output LS analysis results
-        if (outfile_tag["LS"])
-        {
-            outSigResultF(outM=RESULT[ls_id][[1]], SIG_row=SIG_row, outRawData=outRawData,
-               EXPM=EXPM, ID_ORDER=ID_ORDER, methodName="LS", outfile_name=outfile_name,
-               features=c("BH.Q", "p"), tabletypeL=tabletypeL, outputFile);
-            integration_header <- c(integration_header, paste("LS", sig_header, sep="_"));
-        }
+      outSigResultF(outM=ARS_OUTM, SIG_row=SIG_row, outRawData=outRawData,
+                    EXPM=EXPM,ID_ORDER=ID_ORDER, methodName="ARS", outfile_name=outfile_name,
+                    features=c("fdr_BH", "pvalue"), tabletypeL=tabletypeL, outputFile);
+      integration_header <- c(integration_header, paste("ARS", sig_header, sep="_"));
     }
-
-    ####integration step and output integrated results
-    AMPTIM <- timepoints;
-    ###do not set 'integration_outM' as NULL here
-    integration_outM <- "None_output";
-    outLIST <- list("ARS"=RESULT[ars_id][[1]],"JTK"=RESULT[jtk_id][[1]],"LS"=RESULT[ls_id][[1]]);
-    if (  INTEGRATION != "noIntegration" )
+    ###output JTK analysis results
+    if (outfile_tag["JTK"])
     {
-        ###integration step depending on the number of used methods
-        integration_num <- length(outfile_tag[outfile_tag > 0]);
-        if (integration_num > 1) {
-            ###if 'infile' is analyzed by two or three methods
-            ###put pvalue, phase and period from multiple methods into three matrix
-            integration_outM <- pvaM <- phaM <- perM <- ID_ORDER;
-            out_index <- as.numeric(which(outfile_tag == 1));
-            out_index <- sort(out_index);
-            for (index in out_index)
-            {
-                sep_outM <- outLIST[[index]];
-                if (length(sep_outM) > 1) {
-                    if (index == 1) {
-                        ars_adjM <- adjPhaARS(sep_outM[ID_ORDER,],adjustV=ADPHA);
-                        integration_outM <- cbind(integration_outM,sep_outM[ID_ORDER,c("pvalue","fdr_BH")],ars_adjM);
-                        pvaM <- cbind(pvaM,sep_outM[ID_ORDER,"pvalue"]);
-                        phaM <- cbind(phaM,ars_adjM[ID_ORDER,"phase"]);
-                        perM <- cbind(perM,ars_adjM[ID_ORDER,"period"]);
-                        if (INTEGRATION == "onlyIntegration")
-                        {  integration_header <- c(integration_header, paste("ARS", sig_header, sep="_"));  }
-                    } else if (index == 2) {
-                        jtk_adjpha <- adjPhaJTK(sep_outM[ID_ORDER,], adjustV=ADPHA, START_TIME);
-                        integration_outM <- cbind(integration_outM, sep_outM[ID_ORDER,c("ADJ.P","BH.Q","PER")],
-						                          jtk_adjpha[ID_ORDER], sep_outM[ID_ORDER,"AMP"]);
-                        pvaM <- cbind(pvaM, sep_outM[ID_ORDER,"ADJ.P"]);
-                        phaM <- cbind(phaM, jtk_adjpha[ID_ORDER]);
-                        perM <- cbind(perM, sep_outM[ID_ORDER,"PER"]);
-                        if (INTEGRATION == "onlyIntegration")
-                        {  integration_header <- c(integration_header, paste("JTK", sig_header, sep="_"));  }
-                    } else if (index == 3) {
-                        ls_adjpha <- adjPhaLS(sep_outM[ID_ORDER,],adjustV=ADPHA);
-                        integration_outM <- cbind(integration_outM, sep_outM[ID_ORDER,c("p","BH.Q","Period")],
-						                          ls_adjpha[ID_ORDER], sep_outM[ID_ORDER,"PhaseShiftHeight"]);
-                        pvaM <- cbind(pvaM, sep_outM[ID_ORDER,"p"]);
-                        phaM <- cbind(phaM, ls_adjpha[ID_ORDER]);
-                        perM <- cbind(perM, sep_outM[ID_ORDER,"Period"]);
-                        if (INTEGRATION == "onlyIntegration")
-                        {  integration_header <- c(integration_header, paste("LS", sig_header, sep="_"));  }
-                    }
-                } else {
-                    stop(c("No result from ", names(outfile_tag[index]),
-                        " during integration. If 'analysisStrategy' was set as ",
-                        "'selfUSE', please check whether ", names(outfile_tag[index]),
-                        " is suitable for analyzing the input file. If it was set as ",
-                        "'auto', please contact the author.\n") );
-                }
-            }
-            ###get column names of integrated results
-            if (adjustPhase == "notAdjusted")
-            {
-                ###if 'notAdjusted' is selected, only show integrated pvalues in the results
-                integration_header <- c(integration_header, "meta2d_pvalue","meta2d_BH.Q");
-            }  else  {
-                integration_header <- c(integration_header, paste("meta2d", sig_header[1:3], sep="_"),
-                                       "meta2d_phase", "meta2d_Base", "meta2d_AMP", "meta2d_rAMP");
-            }
-            ###integrate pvalue, period, phase, and re-calculate amplitude
-            if (ncol(pvaM) > 1)
-            {
-                if (nrow(pvaM) >= 2) {
-                    cirpvaM <- getCirOmicsPVA(pvaM, method=combinePvalue);
-                    if (adjustPhase == "notAdjusted")
-                    {
-                        ###if 'notAdjusted' is selected, only integrate pvalues
-                        integration_outM <- cbind(integration_outM, cirpvaM[ID_ORDER,]);
-                    }  else  {
-                        cirperphaM <- getCirOmicsPerPha(periodM=perM, phaseM=phaM,
-						                                   pvalueM=pvaM, adjustV=ADPHA, weightedPerPha);
-                        EXPMPERPHA <- cbind(EXPM[ID_ORDER,],cirperphaM[ID_ORDER,]);
-                        ampM <- getCirOmicsAMP(exprperphaM=EXPMPERPHA, AMPTIM);
-                        dimnames(ampM)[[1]] <- ID_ORDER;
-                        integration_outM <- cbind(integration_outM, cirpvaM[ID_ORDER,],
-						                                      cirperphaM[ID_ORDER,], ampM[ID_ORDER,]);
-                    }
-                } else {
-                    stop(c("There is a bug in integration ",
-                         "step, please contact the author.\n") );
-                }
-            }
+      outSigResultF(outM=JTK_OUTM, SIG_row=SIG_row, outRawData=outRawData,
+                    EXPM=EXPM, ID_ORDER=ID_ORDER, methodName="JTK", outfile_name=outfile_name,
+                    features=c("BH.Q", "ADJ.P"),tabletypeL=tabletypeL, outputFile);
+      integration_header <- c(integration_header, paste("JTK", sig_header, sep="_"));
+    }
+    ###output LS analysis results
+    if (outfile_tag["LS"])
+    {
+      outSigResultF(outM=LS_OUTM, SIG_row=SIG_row, outRawData=outRawData,
+                    EXPM=EXPM, ID_ORDER=ID_ORDER, methodName="LS", outfile_name=outfile_name,
+                    features=c("BH.Q", "p"), tabletypeL=tabletypeL, outputFile);
+      integration_header <- c(integration_header, paste("LS", sig_header, sep="_"));
+    }
+  }
+  
+  ####integration step and output integrated results
+  AMPTIM <- timepoints;
+  ###do not set 'integration_outM' as NULL here
+  integration_outM <- "None_output";
+  outLIST <- list("ARS"=ARS_OUTM,"JTK"=JTK_OUTM,"LS"=LS_OUTM);
+  if (  INTEGRATION != "noIntegration" )
+  {
+    ###integration step depending on the number of used methods
+    integration_num <- length(outfile_tag[outfile_tag > 0]);
+    if (integration_num > 1) {
+      ###if 'infile' is analyzed by two or three methods
+      ###put pvalue, phase and period from multiple methods into three matrix
+      integration_outM <- pvaM <- phaM <- perM <- ID_ORDER;
+      out_index <- as.numeric(which(outfile_tag == 1));
+      out_index <- sort(out_index);
+      for (index in out_index)
+      {
+        sep_outM <- outLIST[[index]];
+        if (length(sep_outM) > 1) {
+          if (index == 1) {
+            ars_adjM <- adjPhaARS(sep_outM[ID_ORDER,],adjustV=ADPHA);
+            integration_outM <- cbind(integration_outM,sep_outM[ID_ORDER,c("pvalue","fdr_BH")],ars_adjM);
+            pvaM <- cbind(pvaM,sep_outM[ID_ORDER,"pvalue"]);
+            phaM <- cbind(phaM,ars_adjM[ID_ORDER,"phase"]);
+            perM <- cbind(perM,ars_adjM[ID_ORDER,"period"]);
+            if (INTEGRATION == "onlyIntegration")
+            {  integration_header <- c(integration_header, paste("ARS", sig_header, sep="_"));  }
+          } else if (index == 2) {
+            jtk_adjpha <- adjPhaJTK(sep_outM[ID_ORDER,], adjustV=ADPHA, START_TIME);
+            integration_outM <- cbind(integration_outM, sep_outM[ID_ORDER,c("ADJ.P","BH.Q","PER")],
+                                      jtk_adjpha[ID_ORDER], sep_outM[ID_ORDER,"AMP"]);
+            pvaM <- cbind(pvaM, sep_outM[ID_ORDER,"ADJ.P"]);
+            phaM <- cbind(phaM, jtk_adjpha[ID_ORDER]);
+            perM <- cbind(perM, sep_outM[ID_ORDER,"PER"]);
+            if (INTEGRATION == "onlyIntegration")
+            {  integration_header <- c(integration_header, paste("JTK", sig_header, sep="_"));  }
+          } else if (index == 3) {
+            ls_adjpha <- adjPhaLS(sep_outM[ID_ORDER,],adjustV=ADPHA);
+            integration_outM <- cbind(integration_outM, sep_outM[ID_ORDER,c("p","BH.Q","Period")],
+                                      ls_adjpha[ID_ORDER], sep_outM[ID_ORDER,"PhaseShiftHeight"]);
+            pvaM <- cbind(pvaM, sep_outM[ID_ORDER,"p"]);
+            phaM <- cbind(phaM, ls_adjpha[ID_ORDER]);
+            perM <- cbind(perM, sep_outM[ID_ORDER,"Period"]);
+            if (INTEGRATION == "onlyIntegration")
+            {  integration_header <- c(integration_header, paste("LS", sig_header, sep="_"));  }
+          }
         } else {
-                ###the 'infile' is analyzed by only one method, ARS or JTK or LS
-                ###the 'getSigIntegResultF()' is in 'meta2dSubF.R'
-                sigIntegL <- getSigIntegResultF(sigoutL=outLIST, outfile_tag=outfile_tag, EXPM=EXPM,
-                                   ID_ORDER=ID_ORDER, ADPHA=ADPHA, AMPTIM=AMPTIM, START_TIME=START_TIME,
-                                   INTEGRATION=INTEGRATION, integration_outM=integration_outM, integration_header);
-                integration_outM <- sigIntegL$integ;
-                integration_header <- sigIntegL$header;
+          stop(c("No result from ", names(outfile_tag[index]),
+                 " during integration. If 'analysisStrategy' was set as ",
+                 "'selfUSE', please check whether ", names(outfile_tag[index]),
+                 " is suitable for analyzing the input file. If it was set as ",
+                 "'auto', please contact the author.\n") );
         }
-        ###output integrated results
-        if (!is.vector(integration_outM)) {
-            if ( ncol(integration_outM) > 1 )
-            {
-                integration_outM <- cbind(OUT_ID[ID_ORDER],integration_outM[,-1]);
-                dimnames(integration_outM)[[1]] <- ID_ORDER;
-                dimnames(integration_outM)[[2]] <- integration_header;
-                ###output integrated results if 'outputFile=TRUE'
-                if (outputFile)
-                {
-                    ###the 'outIntegResultF()' is in 'meta2dSubF.R'
-                    outIntegResultF(integration_outM=integration_outM, EXPM=EXPM,
-                            ID_ORDER=ID_ORDER, integration_header=integration_header, SIG_row=SIG_row,
-                            outRawData=outRawData, integ_outname=integ_outname, tabletypeL);
-                }
-            } else {
-                cycMethod <- paste(cycMethod, collapse=",");
-                stop(c("No integration results from ", cycMethod, ". There is ",
-                     "a bug in the integration step, please contact the author.\n") );
-            }
+      }
+      ###get column names of integrated results
+      if (adjustPhase == "notAdjusted")
+      {
+        ###if 'notAdjusted' is selected, only show integrated pvalues in the results
+        integration_header <- c(integration_header, "meta2d_pvalue","meta2d_BH.Q");
+      }  else  {
+        integration_header <- c(integration_header, paste("meta2d", sig_header[1:3], sep="_"),
+                                "meta2d_phase", "meta2d_Base", "meta2d_AMP", "meta2d_rAMP");
+      }
+      ###integrate pvalue, period, phase, and re-calculate amplitude
+      if (ncol(pvaM) > 1)
+      {
+        if (nrow(pvaM) >= 2) {
+          cirpvaM <- getCirOmicsPVA(pvaM, method=combinePvalue);
+          if (adjustPhase == "notAdjusted")
+          {
+            ###if 'notAdjusted' is selected, only integrate pvalues
+            integration_outM <- cbind(integration_outM, cirpvaM[ID_ORDER,]);
+          }  else  {
+            cirperphaM <- getCirOmicsPerPha(periodM=perM, phaseM=phaM,
+                                            pvalueM=pvaM, adjustV=ADPHA, weightedPerPha);
+            EXPMPERPHA <- cbind(EXPM[ID_ORDER,],cirperphaM[ID_ORDER,]);
+            ampM <- getCirOmicsAMP(exprperphaM=EXPMPERPHA, AMPTIM);
+            dimnames(ampM)[[1]] <- ID_ORDER;
+            integration_outM <- cbind(integration_outM, cirpvaM[ID_ORDER,],
+                                      cirperphaM[ID_ORDER,], ampM[ID_ORDER,]);
+          }
+        } else {
+          stop(c("There is a bug in integration ",
+                 "step, please contact the author.\n") );
         }
-    }
-
-    ####output analysis note on the screen
-    if (sum(outfile_tag) == 0)
-    {
-        cycMethod <- paste(cycMethod, collapse=",");
-        stop(c("Warning: no output result from selected method ",
-             cycMethod, ". Please check whether at least one is suitable ",
-             "for analyzing the input file, and whether all parameters ",
-             "are correctly set as suggest. If it is quite sure about ",
-             "selected methods and parameters, please contact the author.\n"));
+      }
     } else {
-        if (releaseNote)  {
-            cat(c("DONE! The analysis about '",INFILE,"'"," has been finished.\n"));
-            print( c("Time used:",(proc.time()-run_start)) );
-            cat("\n\n");
+      ###the 'infile' is analyzed by only one method, ARS or JTK or LS
+      ###the 'getSigIntegResultF()' is in 'meta2dSubF.R'
+      sigIntegL <- getSigIntegResultF(sigoutL=outLIST, outfile_tag=outfile_tag, EXPM=EXPM,
+                                      ID_ORDER=ID_ORDER, ADPHA=ADPHA, AMPTIM=AMPTIM, START_TIME=START_TIME,
+                                      INTEGRATION=INTEGRATION, integration_outM=integration_outM, integration_header);
+      integration_outM <- sigIntegL$integ;
+      integration_header <- sigIntegL$header;
+    }
+    ###output integrated results
+    if (!is.vector(integration_outM)) {
+      if ( ncol(integration_outM) > 1 )
+      {
+        integration_outM <- cbind(OUT_ID[ID_ORDER],integration_outM[,-1]);
+        dimnames(integration_outM)[[1]] <- ID_ORDER;
+        dimnames(integration_outM)[[2]] <- integration_header;
+        ###output integrated results if 'outputFile=TRUE'
+        if (outputFile)
+        {
+          ###the 'outIntegResultF()' is in 'meta2dSubF.R'
+          outIntegResultF(integration_outM=integration_outM, EXPM=EXPM,
+                          ID_ORDER=ID_ORDER, integration_header=integration_header, SIG_row=SIG_row,
+                          outRawData=outRawData, integ_outname=integ_outname, tabletypeL);
         }
+      } else {
+        cycMethod <- paste(cycMethod, collapse=",");
+        stop(c("No integration results from ", cycMethod, ". There is ",
+               "a bug in the integration step, please contact the author.\n") );
+      }
     }
-
-    ####return analysis results if 'outputFile=FALSE'
-    if (!outputFile)
-    {
-        meta2dL <- returnResultF(outLIST=outLIST, integration_outM=integration_outM, EXPM=EXPM,
-		                 ID_ORDER=ID_ORDER, outfile_tag=outfile_tag, SIG_row=SIG_row, outRawData)
-        return(meta2dL);
+  }
+  
+  ####output analysis note on the screen
+  if (sum(outfile_tag) == 0)
+  {
+    cycMethod <- paste(cycMethod, collapse=",");
+    stop(c("Warning: no output result from selected method ",
+           cycMethod, ". Please check whether at least one is suitable ",
+           "for analyzing the input file, and whether all parameters ",
+           "are correctly set as suggest. If it is quite sure about ",
+           "selected methods and parameters, please contact the author.\n"));
+  } else {
+    if (releaseNote)  {
+      cat(c("DONE! The analysis about '",INFILE,"'"," has been finished.\n"));
+      print( c("Time used:",(proc.time()-run_start)) );
+      cat("\n\n");
     }
+  }
+  
+  ####return analysis results if 'outputFile=FALSE'
+  if (!outputFile)
+  {
+    meta2dL <- returnResultF(outLIST=outLIST, integration_outM=integration_outM, EXPM=EXPM,
+                             ID_ORDER=ID_ORDER, outfile_tag=outfile_tag, SIG_row=SIG_row, outRawData)
+    return(meta2dL);
+  }
 }
