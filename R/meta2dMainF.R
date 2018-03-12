@@ -468,7 +468,7 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
     } else if ( (MISSING_VALUE) | (WITH_REPLICATE) ) {
       if (CIRM["JTK"])
       {
-        JTK_OUTM <- runJTK(EXP_dataframe, timepoints, minper=MINPER, maxper=MAXPER, releaseNote);
+        JTK_OUTM <- runJTK(EXP_dataframe, timepoints, minper=MINPER, maxper=MAXPER, releaseNote,para = parallelize, ncores = nCores);
         outfile_tag["JTK"] <- 1;
       }
       if (CIRM["LS"])
@@ -485,7 +485,7 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
       }
       if (CIRM["JTK"])
       {
-        JTK_OUTM <- runJTK(EXP_dataframe, timepoints, minper=MINPER,maxper=MAXPER, releaseNote);
+        JTK_OUTM <- runJTK(EXP_dataframe, timepoints, minper=MINPER,maxper=MAXPER, releaseNote,para = parallelize, ncores = nCores);
         outfile_tag["JTK"] <- 1;
       }
       if (CIRM["LS"])
@@ -510,7 +510,7 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
     }
     if (CIRM["JTK"])
     {
-      JTK_OUTM <- runJTK(EXP_dataframe,timepoints,minper=MINPER,maxper=MAXPER,releaseNote);
+      JTK_OUTM <- runJTK(EXP_dataframe,timepoints,minper=MINPER,maxper=MAXPER,releaseNote,para = parallelize, ncores = nCores);
       outfile_tag["JTK"] <- 1;
     }
     if (CIRM["LS"])
