@@ -8,6 +8,9 @@ which incorporates [ARSER](https://github.com/cauyrd/ARSER), [JTK_CYCLE](http://
 time-series datasets with individual information, **meta3d** is suggested, which takes use of any one of these three methods to 
 analyze time-series data individual by individual and gives out integrated values based on analysis result of each individual.
 
+## Update news
+For accelerating the analysis process of MetaCycle, it is under the development of parallel version which is lead by Xaiver (haohan.li.97@gmail.com). 
+
 ## Installation
 Use **devtools** to install this version from Github:
 
