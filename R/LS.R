@@ -140,7 +140,7 @@ runLS <- function(indata,LStime,minper=20,maxper=28,releaseNote=TRUE, para = FAL
 	  j <- 1:length(outID)
 	  Nindependent <- apply(Expression[j,], 1, function(x){NHorneBaliunas(sum(!is.na(x)))} )
 	  h <- split(Expression[j,], row(Expression[j,])) 
-	  data <- mcmapply(ComputeAndPlotLombScargle, h, TestFrequencies, Nindependent, TRUE, MoreArgs = list(t=Time), SIMPLIFY = FALSE, mc.cores = ncores )
+	  data <- mcmapply(ComputeAndPlotLombScargle, h, Nindependent, TRUE, MoreArgs = list(TestFrequencies= TestFrequencies,t=Time), SIMPLIFY = FALSE, mc.cores = ncores )
 	  rows <- mcmapply(	  
 	    function(j,LS){
 	      c(outID[j], LS$h.peak$maximum,LS$h.peak$objective, LS$PeakIndex,LS$PeakSPD, 

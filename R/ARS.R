@@ -330,7 +330,7 @@ runARS <- function(indata,ARStime,minper=20,maxper=28, arsper=24, arsmet="", rel
         }
         d
       },
-      idorder, flag, evay, self.delta, start, end, arsper, arsmet, MoreArgs = list(time = time_points),
+      idorder, flag, evay, self.delta, start, end, arsper, MoreArgs = list(time = time_points, arsmet=arsmet),
       SIMPLIFY = FALSE, mc.cores = ncores )
     
     rm(flag, evay)
