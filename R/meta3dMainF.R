@@ -171,7 +171,7 @@ meta3d <- function(datafile, designfile, outdir="metaout", filestyle,
                     design_groupColm=NULL, design_libIDrename=NULL,
                     adjustPhase="predictedPer", combinePvalue="fisher",
                     weightedMethod=TRUE, outIntegration="both", ARSmle="auto",
-                    ARSdefaultPer=24, dayZeroBased=FALSE, outSymbol="")
+                    ARSdefaultPer=24, dayZeroBased=FALSE, outSymbol="", para = FALSE, nCores = 1)
 {
 
     ####start time
@@ -514,7 +514,7 @@ meta3d <- function(datafile, designfile, outdir="metaout", filestyle,
 
         meta2d_outD <- runmeta2dF(indata=expdataD, intime=subject_timeT[order_timeT],
                             datatype=patternD[i,], rundir=OUTDIR, runMethod=cycMethodOne,
-                            minper=minper, maxper=maxper, ARSmle=ARSmle, ARSdefaultPer=ARSdefaultPer);
+                            minper=minper, maxper=maxper, ARSmle=ARSmle, ARSdefaultPer=ARSdefaultPer, para = para, nCores = nCores);
         SUBJECT_LSL[[i]] <- meta2d_outD;
     }
 

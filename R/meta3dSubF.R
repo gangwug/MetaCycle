@@ -184,7 +184,7 @@ addMissingValueF <- function(dataD, rawtime, duplicate)
 ##the "intime" is already sorted in order; "datatype" is a vector containing five elements-
 ##nonInteger, uneven, miss, dup, uniNum, see the return values of "checkDataTypeF"
 runmeta2dF <- function(indata, intime, datatype, rundir, runMethod="JTK", 
-                       minper=20, maxper=28, ARSmle="auto", ARSdefaultPer=24)
+                       minper=20, maxper=28, ARSmle="auto", ARSdefaultPer=24, para = F, nCores = 1)
 {
 	meta2data <- indata
 	meta2time <- intime
@@ -202,7 +202,6 @@ runmeta2dF <- function(indata, intime, datatype, rundir, runMethod="JTK",
 		meta2data <- addNA$out
 		meta2time <- addNA$tim
 	}
-
 	##write 'meta2data' to a temporary file 
 	tempname <- paste("runmeta2dtemp", as.character(runif(1,0,1)), sep="")
 	tempfname <- paste(rundir, .Platform$file.sep, tempname, sep="")
@@ -212,7 +211,7 @@ runmeta2dF <- function(indata, intime, datatype, rundir, runMethod="JTK",
                 minper=minper, maxper=maxper, cycMethod=runMethod, adjustPhase="predictedPer", 
 				combinePvalue="fisher", analysisStrategy="auto", weightedPerPha=FALSE,
                 outputFile=FALSE, ARSmle=ARSmle, outIntegration="onlyIntegration", 
-                ARSdefaultPer=ARSdefaultPer, outRawData=TRUE, releaseNote=FALSE)
+                ARSdefaultPer=ARSdefaultPer, outRawData=TRUE, releaseNote=FALSE, para = para, nCores = nCores)
     outD <- outL$meta
 	##delete the temporary file and return results
 	file.remove(tempfname)
