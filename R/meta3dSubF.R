@@ -203,8 +203,9 @@ runmeta2dF <- function(indata, intime, datatype, rundir, runMethod="JTK",
 		meta2time <- addNA$tim
 	}
 	##write 'meta2data' to a temporary file 
-	tempname <- paste("runmeta2dtemp", as.character(runif(1,0,1)), sep="")
-	tempfname <- paste(rundir, .Platform$file.sep, tempname, sep="")
+	## use process id to avoid duplicate file name when parallel
+	tempfname <- tempfile(pattern=paste("file", Sys.getpid(), sep=""), tmpdir=paste(rundir, .Platform$file.sep, sep="") ,fileext = '.txt')
+	
 	write.table(meta2data, file=tempfname, quote=FALSE, sep="\t", row.names=FALSE)	
 	##run selected method with 'meta2d()' function	
 	outL <- meta2d(infile=tempfname, outdir=rundir, filestyle="txt", timepoints=meta2time,

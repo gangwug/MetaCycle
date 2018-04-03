@@ -495,8 +495,32 @@ meta3d <- function(datafile, designfile, outdir="metaout", filestyle,
 
     ###run 'meta2d()' function subject by subject
     SUBJECT_LSL <- list();
-    for (i in 1:length(UNI_SUBJECTID))
-    {
+    if(para){
+      SUBJECT_LSL <- mcmapply(
+        function(i){
+          subject_designD <- SUBJECT_DGL[[i]];
+          subject_libID <- subject_designD$libID;
+          subject_timeT <- subject_designD$timeT;
+          ###sort time points in order
+          names(subject_timeT) <- 1:length(subject_timeT);
+          order_timeT <- names(sort(subject_timeT));
+          order_timeT <- as.numeric(order_timeT);
+          ###arrange libraryID of each subject according sorted time points
+          expdataD <- EXPD[,subject_libID[order_timeT]];
+          dimnames(expdataD)[[1]] <- EXP_IDS;
+          dimnames(expdataD)[[2]] <- subject_libID[order_timeT];
+          meta2d_outD <- runmeta2dF(indata=expdataD, intime=subject_timeT[order_timeT],
+                                    datatype=patternD[i,], rundir=OUTDIR, runMethod=cycMethodOne,
+                                    minper=minper, maxper=maxper, ARSmle=ARSmle, ARSdefaultPer=ARSdefaultPer, para = F, nCores = 1);
+          return(meta2d_outD) 
+          
+        }
+        ,1:length(UNI_SUBJECTID), SIMPLIFY = FALSE ,mc.cores = nCores
+      )
+      a <- 1
+    } else {
+      for (i in 1:length(UNI_SUBJECTID))
+      {
         subject_designD <- SUBJECT_DGL[[i]];
         subject_libID <- subject_designD$libID;
         subject_timeT <- subject_designD$timeT;
@@ -511,11 +535,12 @@ meta3d <- function(datafile, designfile, outdir="metaout", filestyle,
         cat(paste("The 'meta3d' is processing ", UNI_SUBJECTID[i],
                   ", the ", i, " in total ", length(UNI_SUBJECTID),
                   " subjects.\n", sep="") );
-
+        
         meta2d_outD <- runmeta2dF(indata=expdataD, intime=subject_timeT[order_timeT],
-                            datatype=patternD[i,], rundir=OUTDIR, runMethod=cycMethodOne,
-                            minper=minper, maxper=maxper, ARSmle=ARSmle, ARSdefaultPer=ARSdefaultPer, para = para, nCores = nCores);
+                                  datatype=patternD[i,], rundir=OUTDIR, runMethod=cycMethodOne,
+                                  minper=minper, maxper=maxper, ARSmle=ARSmle, ARSdefaultPer=ARSdefaultPer, para = F, nCores = 1);
         SUBJECT_LSL[[i]] <- meta2d_outD;
+      }
     }
 
     ###check whether there are analysis results
