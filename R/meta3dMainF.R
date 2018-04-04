@@ -130,6 +130,9 @@
 ##'   recorded as day zero in the \code{designfile}.
 ##' @param outSymbol a character string. A common prefix exists in the names of
 ##'   output files.
+##' @param parallelize logical. If \code{TRUE}, computation will be done in paralleL
+##' Doesn't work in windows machine 
+##' @param nCores a integer. Bigger or equal to one, number of cores to use 
 ##' @return
 ##' \code{meta3d} will write analysis results to \code{outdir} instead of
 ##'   returning them as objects. Output files with "meta3dSubjectID" in
@@ -171,7 +174,8 @@ meta3d <- function(datafile, designfile, outdir="metaout", filestyle,
                     design_groupColm=NULL, design_libIDrename=NULL,
                     adjustPhase="predictedPer", combinePvalue="fisher",
                     weightedMethod=TRUE, outIntegration="both", ARSmle="auto",
-                    ARSdefaultPer=24, dayZeroBased=FALSE, outSymbol="", para = FALSE, nCores = 1)
+                    ARSdefaultPer=24, dayZeroBased=FALSE, outSymbol="", 
+                    parallelize=FALSE, nCores=1)
 {
 
     ####start time
@@ -495,7 +499,7 @@ meta3d <- function(datafile, designfile, outdir="metaout", filestyle,
 
     ###run 'meta2d()' function subject by subject
     SUBJECT_LSL <- list();
-    if(para){
+    if(parallelize){
       SUBJECT_LSL <- mcmapply(
         function(i){
           subject_designD <- SUBJECT_DGL[[i]];
