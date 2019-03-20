@@ -391,8 +391,8 @@ runJTK <- function(indata,JTKtime,minper=20,maxper=28, releaseNote=TRUE, para = 
 		flush.console();
 		##analyze input data
 		if (para){
-		  data_rows <- mclapply(as.list(1:dim(data)[1]), function(x) {data[x[1],]}, mc.cores = ncores )
-		  res <- mcmapply(
+		  data_rows <- parallel::mclapply(as.list(1:dim(data)[1]), function(x) {data[x[1],]}, mc.cores = ncores )
+		  res <- parallel::mcmapply(
 		    function(z) {
 		      outz <- jtkx(unlist(z));
 		      return(outz[1:4]);
