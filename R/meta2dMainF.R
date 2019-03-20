@@ -120,8 +120,9 @@
 ##' @param outSymbol a character string. A common prefix exists in the names of
 ##'   output files.
 ##' @param parallelize logical. If \code{TRUE}, computation will be done in paralleL
-##' Doesn't work in windows machine 
-##' @param nCores a integer. Bigger or equal to one, number of cores to use 
+##' Doesn't work in windows machine
+##' @param nCores a integer. Bigger or equal to one, number of cores to use
+##' @param inDF data.frame. If \code{!is.null(inDF)} and timepoints is a numeric meta2d will use this data.frame instead of loading from \code{infile}.
 ##' @return
 ##' \code{meta2d} will write analysis results in different files under
 ##'   \code{outdir} if set \code{outputFile = TRUE}. Files named with
@@ -217,22 +218,24 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
                    maxper=28, cycMethod=c("ARS","JTK","LS"), analysisStrategy="auto",
                    outputFile=TRUE, outIntegration="both", adjustPhase="predictedPer",
                    combinePvalue="fisher",  weightedPerPha=FALSE,  ARSmle="auto",
-                   ARSdefaultPer=24,outRawData=FALSE,releaseNote=TRUE,outSymbol="", 
-                   parallelize=FALSE, nCores=1)
+                   ARSdefaultPer=24,outRawData=FALSE,releaseNote=TRUE,outSymbol="",
+                   parallelize=FALSE, nCores=1,inDF=NULL)
 {
-  
+
   ####start time
   run_start=proc.time();
-  
+
   ####extract 'infile', 'outdir', 'minper', 'maxper',
   ####set by users and store them as global variables
+  fromDF <- !is.null(inDF)
   INFILE <- infile;
   outdir2 <- unlist(strsplit(outdir,.Platform$file.sep));
   OUTDIR <- paste(outdir2,collapse=.Platform$file.sep);
-  ###create the directory if it is not exist
-  if (! file.exists(OUTDIR) )
+
+  ###create the directory if it does not exist
+  if (!file.exists(OUTDIR) & outputFile)
   { dir.create(OUTDIR); }
-  
+
   ####check whether input parameters are correct
   ###check 'minper' and 'maxper'
   ###the maximum and minimum period length should be positive number,
@@ -250,7 +253,7 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
   ###the 'checkTimeF' is in 'meta2dSubF.R'
   ###NUMT is TRUE if 'timepoints' is a numeric vector
   NUMT <- checkTimeF(timepoints);
-  
+
   ###check whether output integration results at the end of analysis
   if ( (outIntegration == "both") | (outIntegration == "onlyIntegration") | (outIntegration == "noIntegration") )  {
     INTEGRATION <- outIntegration;
@@ -281,7 +284,7 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
   {
     stop("The 'outRawData' should be set as a logical value (TRUE or FALSE).\n");
   }
-  
+
   ####extract field separator character(FILE_SEP), set of quoting
   ####characters(FILE_QUOTE), the character used for decimal points(FILE_DEC)
   ###the 'getFileSignF()' is in 'metaSubF.R'
@@ -290,7 +293,7 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
   FILE_QUOTE <- file_sign$quote;
   FILE_DEC <- file_sign$dec;
   FILE_QUOTE2 <- file_sign$quote2;
-  
+
   ####extract user-defined method for analyzing expression profiles
   CIRM <- rep(FALSE,3);
   names(CIRM) <- c("ARS","JTK","LS");
@@ -304,34 +307,43 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
     }
   }
   CIRM[cycMethod] <- TRUE;
-  
-  ####read time-series values and extract row and column's name
-  EXP_dataframe <- ID_ORDER <- LIB_ID <- NULL;
-  if (NUMT)
+
+  if(fromDF & NUMT)
   {
-    EXP_dataframe <- read.table(INFILE, header=TRUE, sep=FILE_SEP,
-                                quote=FILE_QUOTE, dec=FILE_DEC, stringsAsFactors=FALSE);
-    ID_ORDER <- dimnames(EXP_dataframe)[[1]];
-    LIB_ID <- dimnames(EXP_dataframe)[[2]];
-  }  else  {
-    EXP_dataframe <- read.table(INFILE, header=FALSE, sep=FILE_SEP,
-                                quote=FILE_QUOTE, dec=FILE_DEC, stringsAsFactors=FALSE);
-    dimnames(EXP_dataframe)[[2]] <- as.character(EXP_dataframe[1,]);
-    timepoints <- as.numeric(EXP_dataframe[1, -1]);
-    if ( any(is.na(timepoints)) | any(is.nan(timepoints)) )
-    {
-      stop(c("Please replace non-numeric character or 'NA' with numeric ",
-             "value (time points) in the first line of 'infile'.\n") );
-    }
-    if (min(timepoints) < 0 )
-    {
-      stop("The minimal time points value should not be a negative value.\n");
-    }
-    EXP_dataframe <- EXP_dataframe[-1,];
+    EXP_dataframe <- inDF
     dimnames(EXP_dataframe)[[1]] <- 1:nrow(EXP_dataframe);
     ID_ORDER <- dimnames(EXP_dataframe)[[1]];
     LIB_ID <- dimnames(EXP_dataframe)[[2]];
+  }  else  {
+    ####read time-series values and extract row and column's name
+    EXP_dataframe <- ID_ORDER <- LIB_ID <- NULL;
+    if (NUMT)
+    {
+      EXP_dataframe <- read.table(INFILE, header=TRUE, sep=FILE_SEP,
+                                  quote=FILE_QUOTE, dec=FILE_DEC, stringsAsFactors=FALSE);
+      ID_ORDER <- dimnames(EXP_dataframe)[[1]];
+      LIB_ID <- dimnames(EXP_dataframe)[[2]];
+    }  else  {
+      EXP_dataframe <- read.table(INFILE, header=FALSE, sep=FILE_SEP,
+                                  quote=FILE_QUOTE, dec=FILE_DEC, stringsAsFactors=FALSE);
+      dimnames(EXP_dataframe)[[2]] <- as.character(EXP_dataframe[1,]);
+      timepoints <- as.numeric(EXP_dataframe[1, -1]);
+      if ( any(is.na(timepoints)) | any(is.nan(timepoints)) )
+      {
+        stop(c("Please replace non-numeric character or 'NA' with numeric ",
+               "value (time points) in the first line of 'infile'.\n") );
+      }
+      if (min(timepoints) < 0 )
+      {
+        stop("The minimal time points value should not be a negative value.\n");
+      }
+      EXP_dataframe <- EXP_dataframe[-1,];
+      dimnames(EXP_dataframe)[[1]] <- 1:nrow(EXP_dataframe);
+      ID_ORDER <- dimnames(EXP_dataframe)[[1]];
+      LIB_ID <- dimnames(EXP_dataframe)[[2]];
+    }
   }
+
   ###check whether correctly read-in the data
   if (ncol(EXP_dataframe) == 1)
   {
@@ -361,7 +373,7 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
   ###store names of each row in 'OUT_ID'
   OUT_ID <- as.character(EXP_dataframe[,1]);
   names(OUT_ID) <- ID_ORDER;
-  
+
   ####sort and check time points
   ####re-arrange column order of input data according time order
   ###sort 'timepoints' value with increasing order
@@ -379,7 +391,7 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
   EXP_dataframe[ID_ORDER, 2:ncol(EXP_dataframe)] <- EXPM[ID_ORDER,];
   LIB_ID <- c(LIB_ID[1], expm_ID);
   dimnames(EXP_dataframe)[[2]] <- LIB_ID;
-  
+
   ###check number of unique time points
   ###uni_timepoints should be ordered
   uni_timepoints <- unique(timepoints);
@@ -394,7 +406,7 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
   }
   ###get the initial time points for JTK
   START_TIME <- uni_timepoints[1];
-  
+
   ####check 'ARSmle' and 'ARSdefaultPer' if 'ARS' is selected
   if (CIRM["ARS"])
   {
@@ -415,7 +427,7 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
              "should be set as 'auto', 'mle' or 'nomle'.\n") );
     }
   }
-  
+
   ####extract key features of input data, including with/without non-integer interval,
   ####even/uneven sampling, with/without missing values, with/without replicates
   MISSING_VALUE <- WITH_REPLICATE <- non_integerInterval <- uneven_interval <- FALSE;
@@ -427,7 +439,7 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
   {	MISSING_VALUE <- TRUE;	}
   if ( length(timepoints) != length(uni_timepoints) )
   {	WITH_REPLICATE <- TRUE;	}
-  
+
   ####set the output file name
   filename <- unlist(strsplit(INFILE,.Platform$file.sep,fixed=TRUE));
   filename <- filename[length(filename)];
@@ -452,7 +464,7 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
   outfile_tag <- rep(0,3);
   names(outfile_tag) <- c("ARS","JTK","LS");
   integ_outname <- paste(OUTDIR, .Platform$file.sep, outSymbol, "meta2d_", filename,sep="");
-  
+
   ####select proper method to analyze profiles depending on sampling pattern
   ####ARS (even sampling & without non-integer intervals & without missing values & without replicates)
   ####JTK (even sampling & without non-integer intervals)
@@ -504,7 +516,7 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
     }
     if (CIRM["ARS"])
     {
-      ARS_OUTM <- runARS(EXP_dataframe, timepoints, minper=MINPER, maxper=MAXPER, 
+      ARS_OUTM <- runARS(EXP_dataframe, timepoints, minper=MINPER, maxper=MAXPER,
                          arsper=ARS_PER, arsmet=ARS_MET, releaseNote,para = parallelize, ncores = nCores);
       outfile_tag["ARS"] <- 1;
     }
@@ -522,7 +534,7 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
     stop(c("Please check the parameter of 'analysisStrategy', ",
            "it should be set as 'auto' or 'selfUSE'.\n") );
   }
-  
+
   ####output analysis result from each selected method
   integration_header <- "CycID";
   tabletypeL <- list("sep"=FILE_SEP, "quote"=FILE_QUOTE2, "dec"=FILE_DEC);
@@ -555,7 +567,7 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
       integration_header <- c(integration_header, paste("LS", sig_header, sep="_"));
     }
   }
-  
+
   ####integration step and output integrated results
   AMPTIM <- timepoints;
   ###do not set 'integration_outM' as NULL here
@@ -631,8 +643,8 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
           }  else  {
             cirperphaM <- getCirOmicsPerPha(periodM=perM, phaseM=phaM,
                                             pvalueM=pvaM, adjustV=ADPHA, weightedPerPha);
-            EXPMPERPHA <- cbind(EXPM[ID_ORDER,],cirperphaM[ID_ORDER,]);
-            ampM <- getCirOmicsAMP(exprperphaM=EXPMPERPHA, AMPTIM);
+              EXPMPERPHA <- cbind(EXPM[ID_ORDER,],cirperphaM[ID_ORDER,]);
+              ampM <- getCirOmicsAMP(exprperphaM=EXPMPERPHA, AMPTIM);
             dimnames(ampM)[[1]] <- ID_ORDER;
             integration_outM <- cbind(integration_outM, cirpvaM[ID_ORDER,],
                                       cirperphaM[ID_ORDER,], ampM[ID_ORDER,]);
@@ -673,7 +685,7 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
       }
     }
   }
-  
+
   ####output analysis note on the screen
   if (sum(outfile_tag) == 0)
   {
@@ -690,7 +702,7 @@ meta2d <- function(infile, outdir="metaout", filestyle, timepoints, minper=20,
       cat("\n\n");
     }
   }
-  
+
   ####return analysis results if 'outputFile=FALSE'
   if (!outputFile)
   {

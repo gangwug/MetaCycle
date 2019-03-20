@@ -173,14 +173,12 @@ get_period<-function(per.x,per.dt_y,per.delta,per.pID="",is_filter=TRUE,ar_metho
   {
     periods=NA;
   } else {
-    peaks_loc=c(NA,0);
-    for (i in 2:(num_freq_mese-1))                         #search all the local peaks of maximum entropy spectrum
-    {
-      if ( ( mese$spec[i] > mese$spec[i+1] ) & ( mese$spec[i] > mese$spec[i-1] ) )
-      {
-        peaks_loc=rbind(peaks_loc,c(mese$spec[i],i) );
-      }
-    }
+    peaks_loc=c(NA,0)
+    im1 <- mese$spec[1:(num_freq_mese-2)]
+    iv <- mese$spec[2:(num_freq_mese-1)]
+    ip1 <- mese$spec[3:(num_freq_mese)]
+    idx <- (iv > ip1) & (iv > im1)
+    peaks_loc <- rbind(peaks_loc,cbind(iv[idx],which(idx)+1))
     if (is.vector(peaks_loc)) {
 		periods=NA;
 	} else {
@@ -303,8 +301,13 @@ runARS <- function(indata,ARStime,minper=20,maxper=28, arsper=24, arsmet="", rel
   names(outID)<-idorder;
   dimnames(dataM)<-list("r"=idorder,"c"=paste("T",self.delta*(0:(ncol(dataM)-1)),sep="" ) );
   #-----------------------
-  expSD<-apply(dataM,1,sd);
-  expMEAN<-apply(dataM,1,mean);
+  expMEAN<-rowMeans(dataM);
+  if(para){
+    expSD <- unlist(parallel::mclapply(1:nrow(dataM),function(i){x <- dataM[i,]; sd(x)},mc.cores = ncores))
+  } else{
+    expSD<-apply(dataM,1,sd);
+  }
+
   constantID<-names(expSD[expSD == 0]);
   flagV<-rep(1,length(idorder));
   names(flagV)<-idorder;
@@ -313,62 +316,12 @@ runARS <- function(indata,ARStime,minper=20,maxper=28, arsper=24, arsmet="", rel
   run_start=proc.time();
   set.seed(run_start["elapsed"]);
   header <- c("filter_type","ar_method","period_number","period","amplitude","phase","mean","R_square","R2_adjust","coef_var","pvalue");
-  ars.outM <- header;
+  ars.outM <- data.frame()
   ori.op <- options();
   #-----------------------
   ##try 'apply()' in latter version, it may improve the Computational Efficiency
-  if(para){
-    flag <- mcmapply(function(line) flagV[line], idorder, mc.cores = ncores )
-    evay <- mcmapply(function(line) dataM[line,], idorder, SIMPLIFY = FALSE , mc.cores = ncores )
-    
-    data <- mcmapply(
-      function(line,flag,evay, time, delta, start, end, arsper, arsmet){
-        if (flag) {
-          d <- evaluate(eva.x=time,eva.y=evay,eva.delta=delta,eva.pID=line,T_start=start, T_end=end, T_default=arsper,arsmethods=arsmet);
-        }else{
-          d <- NULL
-        }
-        d
-      },
-      idorder, flag, evay, self.delta, start, end, arsper, MoreArgs = list(time = time_points, arsmet=arsmet),
-      SIMPLIFY = FALSE, mc.cores = ncores )
-    
-    rm(flag, evay)
-    
-    rows <- mcmapply(	  
-      function(d,line){
-        if (!is.null(d)){
-          ars.filter=0;
-          if (d$filter)
-          { ars.filter=1; }
-          ars.period.num=length(d$period);
-          ars.period=paste(d$period,collapse=",");
-          ars.amplitude=paste(d$amplitude,collapse=",");
-          ars.phase=paste(d$phase,collapse=",");
-          r <- c(ars.filter,d$armethod,ars.period.num,ars.period,ars.amplitude,ars.phase,mean(dataM[line,]),d$R2,d$R2adj,d$coefvar,d$pvalue);
-        }else{
-          r <- c(rep(NA,4),0,NA,expMEAN[line],rep(NA,3),1);
-        }
-        r
-      }, 
-      data, idorder , mc.cores = ncores)
-    
-    pvalues <- mcmapply(
-      function(d){
-        if (!is.null(d)){
-          pvalue <- d$pvalue
-        }else{
-          pvalue <- 1
-        }
-      },data,mc.cores = ncores
-    )
-    rm(data)
-    ars.outM <- t(rows)
-    rm(rows)
-  }else{
-    for (line in idorder )
-    {
-      if (flagV[line]) {
+  mainars <- function(line){
+  if (flagV[line]) {
         d=evaluate(eva.x=time_points,eva.y=dataM[line,],eva.delta=self.delta,eva.pID=line,T_start=start, T_end=end, T_default=arsper,arsmethods=arsmet);
         ars.filter=0;
         if (d$filter)
@@ -383,11 +336,23 @@ runARS <- function(indata,ARStime,minper=20,maxper=28, arsper=24, arsmet="", rel
         ars.out=c(rep(NA,4),0,NA,expMEAN[line],rep(NA,3),1);                           
         pvalues=c(pvalues,1);                                #assign it as '1' insead of 'NA' for avoiding error report in 'pi0.est' step
       }
+    return(ars.out)
+  }
+
+  if(para){
+    tmpout <- parallel::mclapply(idorder,mainars, mc.cores = ncores)
+    ars.outM = do.call(rbind,tmpout)
+    colnames(ars.outM) <- header
+    pvalues=ars.outM[,"pvalue"]
+  }else{
+    for (line in idorder )
+    {
+      ars.out <- mainars(line)
       ars.outM=rbind(ars.outM,ars.out);
     }
-    pvalues=pvalues[2:length(pvalues)];
-    ars.outM=ars.outM[2:nrow(ars.outM),];
+    colnames(ars.outM) <- header
   }
+  pvalues=ars.outM[,"pvalue"]
   options(ori.op);
   dimnames(ars.outM)[[1]]=idorder;
   names(pvalues)=idorder;
