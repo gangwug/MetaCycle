@@ -178,7 +178,8 @@ get_period<-function(per.x,per.dt_y,per.delta,per.pID="",is_filter=TRUE,ar_metho
     iv <- mese$spec[2:(num_freq_mese-1)]
     ip1 <- mese$spec[3:(num_freq_mese)]
     idx <- (iv > ip1) & (iv > im1)
-    peaks_loc <- rbind(peaks_loc,cbind(iv[idx],which(idx)+1))
+    vec <- cbind(iv[idx],which(idx)+1)
+    if(nrow(vec)>0) peaks_loc <- rbind(peaks_loc,vec)
     if (is.vector(peaks_loc)) {
 		periods=NA;
 	} else {
