@@ -365,6 +365,7 @@ runARS <- function(indata,ARStime,minper=20,maxper=28, arsper=24, arsmet="", rel
   header=c("CycID",header,"fdr_BH");
   qvalues_BH=p.adjust(pvalues[idorder],"BH");
   ARSoutM=cbind(outID[idorder],ars.outM[idorder,],qvalues_BH);
+  ARSoutM <- as.matrix(ARSoutM)
   dimnames(ARSoutM)<-list("r"=idorder,"c"=header);
   if (releaseNote)  {
 	cat("The analysis by ARS is finished at ",format(Sys.time(), "%X %m-%d-%Y"),"\n");
