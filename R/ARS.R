@@ -302,18 +302,6 @@ runARS <- function(indata,ARStime,minper=20,maxper=28, arsper=24, arsmet="", rel
   names(outID)<-idorder;
   dimnames(dataM)<-list("r"=idorder,"c"=paste("T",self.delta*(0:(ncol(dataM)-1)),sep="" ) );
   #-----------------------
-  expMEAN<-rowMeans(dataM);
-  if(para){
-    expSD <- unlist(parallel::mclapply(1:nrow(dataM),function(i){x <- dataM[i,]; sd(x)},mc.cores = ncores))
-  } else{
-    expSD<-apply(dataM,1,sd);
-  }
-
-  constantID<-names(expSD[expSD == 0]);
-  flagV<-rep(1,length(idorder));
-  names(flagV)<-idorder;
-  flagV[constantID]<-0;
-  #-----------------------
   run_start=proc.time();
   set.seed(run_start["elapsed"]);
   header <- c("filter_type","ar_method","period_number","period","amplitude","phase","mean","R_square","R2_adjust","coef_var","pvalue");
@@ -321,9 +309,9 @@ runARS <- function(indata,ARStime,minper=20,maxper=28, arsper=24, arsmet="", rel
   ori.op <- options();
   #-----------------------
   ##try 'apply()' in latter version, it may improve the Computational Efficiency
-  mainars <- function(line){
-  if (flagV[line]) {
-        d=evaluate(eva.x=time_points,eva.y=dataM[line,],eva.delta=self.delta,eva.pID=line,T_start=start, T_end=end, T_default=arsper,arsmethods=arsmet);
+  mainars <- function(y){
+      if (sd(y)!=0) {
+        d=evaluate(eva.x=time_points,eva.y=y,eva.delta=self.delta,eva.pID=line,T_start=start, T_end=end, T_default=arsper,arsmethods=arsmet);
         ars.filter=0;
         if (d$filter)
         { ars.filter=1; }
@@ -331,28 +319,26 @@ runARS <- function(indata,ARStime,minper=20,maxper=28, arsper=24, arsmet="", rel
         ars.period=paste(d$period,collapse=",");
         ars.amplitude=paste(d$amplitude,collapse=",");
         ars.phase=paste(d$phase,collapse=",");
-        ars.out=c(ars.filter,d$armethod,ars.period.num,ars.period,ars.amplitude,ars.phase,mean(dataM[line,]),d$R2,d$R2adj,d$coefvar,d$pvalue);
+        ars.out=c(ars.filter,d$armethod,ars.period.num,ars.period,ars.amplitude,ars.phase,mean(y),d$R2,d$R2adj,d$coefvar,d$pvalue);
         pvalues=c(pvalues,d$pvalue);
       } else {
-        ars.out=c(rep(NA,4),0,NA,expMEAN[line],rep(NA,3),1);                           
+        ars.out=c(rep(NA,4),0,NA,mean(y),rep(NA,3),1);                           
         pvalues=c(pvalues,1);                                #assign it as '1' insead of 'NA' for avoiding error report in 'pi0.est' step
       }
     return(ars.out)
   }
 
   if(para){
-    tmpout <- parallel::mclapply(idorder,mainars, mc.cores = ncores)
+    tmpout <- parallel::mclapply(idorder,function(i) mainars(dataM[i,]), mc.cores = ncores)
     ars.outM = do.call(rbind,tmpout)
-    colnames(ars.outM) <- header
-    pvalues=ars.outM[,"pvalue"]
   }else{
     for (line in idorder )
     {
-      ars.out <- mainars(line)
+      ars.out <- mainars(dataM[line,])
       ars.outM=rbind(ars.outM,ars.out);
     }
-    colnames(ars.outM) <- header
   }
+  colnames(ars.outM) <- header
   pvalues=ars.outM[,"pvalue"]
   options(ori.op);
   dimnames(ars.outM)[[1]]=idorder;
@@ -365,7 +351,8 @@ runARS <- function(indata,ARStime,minper=20,maxper=28, arsper=24, arsmet="", rel
   # qvalues=qvalue.cal(pvalues[idorder],pi0$p0);
   header=c("CycID",header,"fdr_BH");
   qvalues_BH=p.adjust(pvalues[idorder],"BH");
-  ARSoutM=cbind(outID[idorder],ars.outM[idorder,],qvalues_BH);
+  ARSoutM=cbind(outID[idorder],ars.outM[idorder,],
+                as.character(qvalues_BH)); # convert to char here keeps more precision
   ARSoutM <- as.matrix(ARSoutM)
   dimnames(ARSoutM)<-list("r"=idorder,"c"=header);
   if (releaseNote)  {
