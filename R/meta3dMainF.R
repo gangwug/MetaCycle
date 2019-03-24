@@ -500,7 +500,7 @@ meta3d <- function(datafile, designfile, outdir="metaout", filestyle,
     ###run 'meta2d()' function subject by subject
     SUBJECT_LSL <- list();
     if(parallelize){
-      SUBJECT_LSL <- mcmapply(
+      SUBJECT_LSL <- parallel::mcmapply(
         function(i){
           subject_designD <- SUBJECT_DGL[[i]];
           subject_libID <- subject_designD$libID;
