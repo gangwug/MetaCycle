@@ -1,6 +1,4 @@
 ###### This file contains functions used in 'meta3dMainF.R'
-###### Author: Gang Wu (wggucas@gmail.com)
-###### Lab: John Hogenesch's lab (http://hogeneschlab.org/)
 ######======================================================================================================================================
 ##extract time information from given columns
 extractTimeColF <- function(design_timeColm, notekeys=c("design_hrColm", "hour"), designD, IDS) 
