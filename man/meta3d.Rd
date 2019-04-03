@@ -116,6 +116,11 @@ recorded as day zero in the \code{designfile}.}
 
 \item{outSymbol}{a character string. A common prefix exists in the names of
 output files.}
+
+\item{parallelize}{a character string. logical. If \code{TRUE}, computation
+will be done in paralleL. Currently not work on Windows machine.}
+
+\item{nCores}{an integer. Bigger or equal to one, number of cores to use.}
 }
 \value{
 \code{meta3d} will write analysis results to \code{outdir} instead of
