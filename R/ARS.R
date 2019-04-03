@@ -4,7 +4,7 @@
 ### Website: http://bioinformatics.cau.edu.cn/ARSER/
 ### R script of ARSER: Gang Wu
 ### Email: wggucas@gmail.com
-### Lab: John Hogenesch's lab in Perelman School of Medicine at University of Pennsylvania (http://hogeneschlab.org/)
+### Lab: John Hogenesch's lab (http://hogeneschlab.org/)
 ###======================================================================================================================================
 detrend_linear<-function(y)
 {
