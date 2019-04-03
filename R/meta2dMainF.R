@@ -120,8 +120,8 @@
 ##' @param outSymbol a character string. A common prefix exists in the names of
 ##'   output files.
 ##' @param parallelize logical. If \code{TRUE}, computation will be done in paralleL
-##' Doesn't work in windows machine
-##' @param nCores a integer. Bigger or equal to one, number of cores to use
+##' Doesn't work in windows machine.
+##' @param nCores a integer. Bigger or equal to one, number of cores to use.
 ##' @param inDF data.frame. If \code{!is.null(inDF)} and timepoints is a numeric meta2d will use this data.frame instead of loading from \code{infile}.
 ##' @return
 ##' \code{meta2d} will write analysis results in different files under
