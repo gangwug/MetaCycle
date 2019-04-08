@@ -1,6 +1,4 @@
 ### This file contains functions used in 'meta2dMainF.R'
-### Author: Gang Wu(wggucas@gmail.com)
-### Lab: John Hogenesch's lab (http://hogeneschlab.org/)
 ###======================================================================================================================================
 ##check timepoints
 checkTimeF <- function(timepoints)

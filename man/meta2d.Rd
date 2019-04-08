@@ -84,6 +84,14 @@ during the analysis will be released on the screen.}
 
 \item{outSymbol}{a character string. A common prefix exists in the names of
 output files.}
+
+\item{parallelize}{a character string. logical. If \code{TRUE}, computation
+will be done in paralleL. Currently not work on Windows machine.}
+
+\item{nCores}{an integer. Bigger or equal to one, number of cores to use.}
+
+\item{inDF}{a data.frame. If \code{!is.null(inDF)} and timepoints is a numeric
+meta2d will use this data.frame instead of loading from \code{infile}.}
 }
 \value{
 \code{meta2d} will write analysis results in different files under
