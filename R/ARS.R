@@ -302,7 +302,7 @@ runARS <- function(indata,ARStime,minper=20,maxper=28, arsper=24, arsmet="", rel
   run_start=proc.time();
   set.seed(run_start["elapsed"]);
   header <- c("filter_type","ar_method","period_number","period","amplitude","phase","mean","R_square","R2_adjust","coef_var","pvalue");
-  ars.outM <- data.frame()
+  
   ori.op <- options();
   #-----------------------
   ##try 'apply()' in latter version, it may improve the Computational Efficiency
@@ -329,6 +329,7 @@ runARS <- function(indata,ARStime,minper=20,maxper=28, arsper=24, arsmet="", rel
     tmpout <- parallel::mclapply(idorder,function(i) mainars(dataM[i,]), mc.cores = ncores)
     ars.outM = do.call(rbind,tmpout)
   }else{
+    ars.outM <- matrix(ncol=11,nrow=0)
     for (line in idorder )
     {
       ars.out <- mainars(dataM[line,])
