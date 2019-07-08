@@ -12,14 +12,9 @@ detrend_linear<-function(y)
   return ( y- (b*x+a) );
 }
 ###-----------------------------------------------------------------------------
-###applies a Savitzky-Golay filter
-savitzky_golay<-function(data, kernel=11, order=4)         
+savitzky_golay <- function(data, kernel=11, order=4)  ###applies a Savitzky-Golay filter       
 {
-  ##input parameters:
-  ##data => data as a vector type
-  ##kernel => a positiv integer > 2*order giving the kernel size
-  ##order => order of the polynomal
-  ##returns smoothed data as a vector type
+  ##input parameters, data => data as a vector type; kernel => a positiv integer > 2*order giving the kernel size; order => order of the polynomal; returns smoothed data as a vector type
   ##-----------------------
   if ( (round(kernel)!=kernel) | (round(order)!=order) | (kernel<1) | (order<1) ) 
   { stop("The input values of kernel and order in 'savitzky_golay' should be positive integers."); }
@@ -44,8 +39,8 @@ savitzky_golay<-function(data, kernel=11, order=4)
   }
   b=matrix(b,nrow=half_window*2+1,ncol=length(order_range),byrow=TRUE);
   ##-----------------------
-  ##'MPinv()' based on 'gnm' package in R can calculate the 'Moore-Penrose pseudo-inverse matrix' as 'numpy.linalg.pinv' in python
-  #library(gnm);
+  ## the "MPinv()" function based on "gnm" package in R can calculate the "Moore-Penrose pseudo-inverse matrix" as "numpy.linalg.pinv" in python
+  # library(gnm);
   m=MPinv(b);
   m=m[1,];
   window_size=length(m);

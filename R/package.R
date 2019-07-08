@@ -1,5 +1,5 @@
 ##' MetaCycle
-##' An integrated R package to evaluate periodicity in large scale data
+##' Evaluate Periodicity in Large Scale Data
 ##' @name MetaCycle
 ##' @docType package
 ##' @author

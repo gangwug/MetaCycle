@@ -19,61 +19,14 @@ sample_AF0004 <- cycHumanBloodDesignSE[sample_index, "sample_library"]
 cycHumanBloodDataSE_AF0004 <- cycHumanBloodData[, c("ID_REF", sample_AF0004)]
 head(cycHumanBloodDataSE_AF0004)
 
-## ---- echo=FALSE, warning=FALSE, fig.width=6.65, fig.height=5------------
-library(shape)
-library(diagram)
-par(mar = c(1, 0.5, 1, 0.5))
-openplotmat()
-#number of elements in each row
-num_element <- c(1, 1, 2, 3, 4, 5)
-#get position information of each element in the flow chart
-elpos <- coordinates (num_element, mx = 0)
-#adjust x-position of some elements
-elposM <- elpos
-elposM[1:2, 1] <- elposM[1:2, 1] - 0.21
-elposM[4,1] <- elposM[4,1] - 0.269
-elposM[7,1] <- elposM[7,1] - 0.186
-elposM[11,1] <- elposM[11,1] - 0.076
-#give information of strat and end point of each arrow
-fromto <- c( c(1, 2), c(2,12), c(2,4), c(4,13), c(4, 7),
-             c(7, 14), c(7,11), c(11, 15), c(11, 16) )
-fromtoM <- matrix(ncol = 2, byrow = TRUE, data = fromto)
-rownum <- nrow(fromtoM)
-#draw arrow and store arrow position informaion in 'arrposM'
-arrposM <- matrix(ncol = 2, nrow = rownum)
-for (i in 1:rownum)
-{
-    arrposM[i, ] <- bentarrow (from = elposM[fromtoM[i, 1], ], to = elposM[fromtoM[i, 2], ], 
-                               lcol = "blue", lwd = 1, arr.pos = 0.56, arr.length = 0.3, arr.lwd = 0.8)
-}
-#draw elements of flow chart
-textparallel(mid = elposM[1,], radx = 0.089, rady=0.06, lab = "Time-series\ndata", lcol = "blue", 
-             lwd=2, shadow.size = 0, cex = 0.72, font=2, theta=80)
-textdiamond(mid =  elposM[2,], radx = 0.12, rady=0.066, lab = "With\nnon-integer\nintervals?", 
-            lcol = "blue", lwd=2, shadow.size = 0, cex = 0.72, font=2)
-diamond_index <- c(4, 7, 11)
-diamond_lab <- c("Uneven\nsampling?", "Missing\nvalue?", "With\nreplicates?")
-for (i in 1:length(diamond_index))
-{
-  textdiamond(mid = elposM[diamond_index[i],], radx = 0.08, rady=0.066, lab = diamond_lab[i], 
-              lcol = "blue", lwd=2, shadow.size = 0, cex = 0.72, font=2)  
-}
+## ---- echo=FALSE, warning=FALSE, out.width = "640px"---------------------
+knitr::include_graphics("./images/image1.png")
 
-round_index <- 12:16
-round_lab <- c("LS", "LS", "JTK&LS", "JTK&LS", "ARS&\nJTK&LS")
-for (j in 1:length(round_index))
-{
-    textround(mid = elposM[round_index[j],], radx=0.056, rady=0.05, lab = round_lab[j],
-              lcol = "blue", lwd=2, shadow.size = 0, cex =0.76, font=2, rx = 0.02)
-}
-#add 'Y' and 'N' on the flow chart
-midposM <- elposM[c(2, 4, 7, 11),]
-xpos <- midposM[,1]
-ypos <- midposM[,2]
-YposM <- cbind(c( (xpos[1] - 0.145), (xpos[2:3] - 0.1), (xpos[4] - 0.086) ), ypos + 0.02)
-NposM <- cbind(c( (xpos[1] + 0.145), (xpos[2:3] + 0.1), (xpos[4] + 0.086) ), ypos + 0.02)
-text(YposM[,1], YposM[,2], labels="Y", cex=0.8, font=2)
-text(NposM[,1], NposM[,2], labels="N", cex=0.8, font=2)
+## ---- echo=FALSE, warning=FALSE, out.width = "640px"---------------------
+knitr::include_graphics("./images/image2.png")
+
+## ---- echo=FALSE, warning=FALSE, out.width = "640px"---------------------
+knitr::include_graphics("./images/image3.png")
 
 ## ---- warning=FALSE------------------------------------------------------
 # given three phases

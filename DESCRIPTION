@@ -1,16 +1,17 @@
 Package: MetaCycle
 Type: Package
-Title: An integrated R package to evaluate periodicity in large scale
-        data
-Version: 1.1.0
+Title: Evaluate Periodicity in Large Scale Data
+Version: 1.2.0
 Authors@R: c(
     person("Gang", "Wu",, email = "wggucas@gmail.com", role = c("aut", "cre")),
     person("Ron", "Anafi",, email = "ranafi@gmail.com", role = c("aut", "ctb")),
 	person("John", "Hogenesch",, email = "hogenesch@gmail.com", role = c("aut", "ctb")),
 	person("Michael", "Hughes",, email = "michael.evan.hughes@gmail.com", role = c("aut", "ctb")),
-	person("Karl", "Kornacker",, email = "kornacker@midohio.twcbc.com", role = c("aut", "ctb"))
+	person("Karl", "Kornacker",, email = "kornacker@midohio.twcbc.com", role = c("aut", "ctb")),
+	person("Xavier", "Li",, email = "haohan.li.97@gmail.com", role = c("aut", "ctb")),
+	person("Matthew", "Carlucci",, email = "matt.carlucci.96@gmail.com", role = c("aut", "ctb"))
     )
-Description: This package provides two functions-meta2d and meta3d for
+Description: There are two functions-meta2d and meta3d for
     detecting rhythmic signals from time-series datasets. For analyzing
     time-series datasets without individual information, 'meta2d' is 
     suggested, which could incorporates multiple methods from ARSER, 
@@ -21,15 +22,20 @@ Description: This package provides two functions-meta2d and meta3d for
     based on analysis result of each individual.
 Depends: R (>= 3.0.2)
 Imports: gnm
-Suggests: knitr, rmarkdown, diagram, shape, parallel
+Suggests: knitr, rmarkdown, parallel
 VignetteBuilder: knitr
 License: GPL (>= 2)
 LazyData: true
-Author: Gang Wu [aut, cre, cph],
-  Ron Anafi [aut, cph],
-  John Hogenesch [aut, cph],
-  Michael, Hughes [aut, cph],
-  Karl, Kornacker [aut, cph]
+Author: Gang Wu [aut, cre],
+  Ron Anafi [aut, ctb],
+  John Hogenesch [aut, ctb],
+  Michael Hughes [aut, ctb],
+  Karl Kornacker [aut, ctb],
+  Xavier Li [aut, ctb],
+  Matthew Carlucci [aut, ctb]
 Maintainer: Gang Wu <wggucas@gmail.com>
 NeedsCompilation: no
-Packaged: 2015-11-05 22:10:24 UTC; CirLab2
+Repository: CRAN
+RoxygenNote: 6.1.1
+Packaged: 2019-04-18 21:27:44 UTC; wug8hn
+Date/Publication: 2019-04-18 22:00:03 UTC

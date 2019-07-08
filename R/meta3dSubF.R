@@ -210,7 +210,7 @@ runmeta2dF <- function(indata, intime, datatype, rundir, runMethod="JTK",
                 minper=minper, maxper=maxper, cycMethod=runMethod, adjustPhase="predictedPer", 
 				combinePvalue="fisher", analysisStrategy="auto", weightedPerPha=FALSE,
                 outputFile=FALSE, ARSmle=ARSmle, outIntegration="onlyIntegration", 
-                ARSdefaultPer=ARSdefaultPer, outRawData=TRUE, releaseNote=FALSE, para = para, nCores = nCores)
+                ARSdefaultPer=ARSdefaultPer, outRawData=TRUE, releaseNote=FALSE, parallelize = para, nCores = nCores)
     outD <- outL$meta
 	##delete the temporary file and return results
 	file.remove(tempfname)

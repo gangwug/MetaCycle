@@ -28,7 +28,7 @@ ComputeLombScargle <- function(t, h, TestFrequencies, Nindependent)           ##
   #modify here considering the situation of 'var(h)=0' for treating those rows with constant values (e.g. all values are 0); note: this was did this on May 4, 2017
   if (length(t) > 0) 
   { 
-    if (var(h) != 0)  {
+    if (stats::var(h) != 0)  {
         Nyquist <- 1 / (2 * ( (max(t) - min(t) )/ length(t) ) )                   ##get the value of Nyquist(the highest frequency for which the unevenly spaced data may be evaluated)
         hResidual    <- h - mean(h)                                               
         SpectralPowerDensity <- rep(0, length(TestFrequencies))       
@@ -44,7 +44,7 @@ ComputeLombScargle <- function(t, h, TestFrequencies, Nindependent)           ##
           }
         # The "normalized" spectral density refers to the variance term in the denominator. 
 	# With this term the SpectralPowerDensity has an exponential probability distribution with unit mean.
-        SpectralPowerDensity <- SpectralPowerDensity / ( 2 * var(h) )             
+        SpectralPowerDensity <- SpectralPowerDensity / ( 2 * stats::var(h) )             
         Probability <- 1 - (1-exp(-SpectralPowerDensity))^Nindependent            ##get the probability
         PeakIndex    <- match(max(SpectralPowerDensity), SpectralPowerDensity)    ##get the the peak index
         # Note:  Might merit more investigation when PeakIndex is the first point.
@@ -92,9 +92,9 @@ ComputeAndPlotLombScargle <- function(t, h, TestFrequencies, Nindependent, para 
   if (N > 5)                                            
   {
     # Compute loess smoothed curve and find peak (assume only one for now)
-    loess.fit <- loess(h ~ t, data.frame(t=t, h=h))                        
-    h.loess   <- predict(loess.fit, data.frame(t=t))                        
-    h.peak    <- optimize(function(t, model)  predict(model, data.frame(t=t)), c(min(t),max(t)),maximum=TRUE,model=loess.fit)
+    loess.fit <- stats::loess(h ~ t, data.frame(t=t, h=h))                        
+    h.loess   <- stats::predict(loess.fit, data.frame(t=t))                        
+    h.peak    <- stats::optimize(function(t, model)  stats::predict(model, data.frame(t=t)), c(min(t),max(t)),maximum=TRUE,model=loess.fit)
 						                                                      ##get the maximum value of smoothed profile value and its corresponding time points value
     LS$h.loess   <- h.loess 
     LS$h.peak    <- h.peak 

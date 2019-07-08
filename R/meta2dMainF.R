@@ -6,7 +6,7 @@
 ##' \href{https://github.com/cauyrd/ARSER}{ARSER}(Yang, 2010),
 ##'   \href{http://openwetware.org/wiki/HughesLab:JTK_Cycle}{JTK_CYCLE}(
 ##'   Hughes, 2010), and
-##'   \href{http://research.stowers-institute.org/efg/2005/LombScargle/}{
+##'   \href{https://academic.oup.com/bioinformatics/article/22/3/310/220284}{
 ##'   Lomb-Scargle}(Glynn, 2006) are three popular methods of detecting
 ##'   rhythmic signals. \code{ARS} can not analyze unevenly sampled datasets,
 ##'   or evenly sampled datasets but with missing values, or with replicate
@@ -183,8 +183,9 @@
 ##'   sep="\t", quote=FALSE, row.names=FALSE)
 ##'
 ##' # analyze 'cycMouseLiverRNA.csv' with JTK_CYCLE
-##' meta2d(infile="cycMouseLiverRNA.csv", filestyle="csv", outdir="example",
-##'   timepoints=18:65, cycMethod="JTK", outIntegration="noIntegration")
+##' # this is masked for keeping the total running time within 10s required by CRAN check
+##' # meta2d(infile="cycMouseLiverRNA.csv", filestyle="csv", outdir="example",
+##' #  timepoints=18:65, cycMethod="JTK", outIntegration="noIntegration")
 ##'
 ##' # analyze 'cycMouseLiverProtein.txt' with JTK_CYCLE and Lomb-Scargle
 ##' meta2d(infile="cycMouseLiverProtein.txt", filestyle="txt",

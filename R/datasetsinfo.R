@@ -1,6 +1,6 @@
 ##' @name cycMouseLiverRNA
 ##' @title cycMouseLiverRNA
-##' @description This data set lists expression profiles of 20 circadian
+##' @description This data set lists expression profiles of 10 circadian
 ##'   transcripts with 1h-resolution covering two days.
 ##' @docType data
 ##' @usage cycMouseLiverRNA
@@ -12,7 +12,7 @@ NULL
 
 ##' @name cycMouseLiverProtein
 ##' @title cycMouseLiverProtein
-##' @description This data set lists expression profiles of 20 circadian
+##' @description This data set lists expression profiles of 5 circadian
 ##'   proteins with 3h-resolution covering two days.
 ##' @docType data
 ##' @usage cycMouseLiverProtein
@@ -27,7 +27,7 @@ NULL
 
 ##' @name cycSimu4h2d
 ##' @title cycSimu4h2d
-##' @description This data set lists 100 simulated profiles(periodic and
+##' @description This data set lists 20 simulated profiles(periodic and
 ##'   non-periodic) with 4h-resolution covering two periods.
 ##' @docType data
 ##' @usage cycSimu4h2d
@@ -40,7 +40,7 @@ NULL
 
 ##' @name cycYeastCycle
 ##' @title cycYeastCycle
-##' @description This data set lists expression profiles of 20 cycling
+##' @description This data set lists expression profiles of 10 cycling
 ##'   transcripts with 16-minutes resolution covering about two yeast cell
 ##'   cycles.
 ##' @docType data
@@ -93,7 +93,7 @@ NULL
 
 ##' @name cycHumanBloodData
 ##' @title cycHumanBloodData
-##' @description This data set lists time-series profiles of 20 transcripts
+##' @description This data set lists time-series profiles of 10 transcripts
 ##'   sampled from  multiple individuals under different sleep conditions.
 ##' @docType data
 ##' @usage cycHumanBloodData
