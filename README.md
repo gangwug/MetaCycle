@@ -9,7 +9,11 @@ time-series datasets with individual information, **meta3d** is suggested, which
 analyze time-series data individual by individual and gives out integrated values based on analysis result of each individual.
 
 ## Update news
-For accelerating the analysis process of MetaCycle, it is under the development of parallel version which is lead by Xavier (haohan.li.97@gmail.com). 
+MetaCycle 1.2.0 was released in [CRAN](https://cran.r-project.org/web/packages/MetaCycle/index.html), which supports parallel analysis (except on Windows system), and can accept input data frame in addition to input files.
+
+We prepared the new [Vignettes](https://cran.r-project.org/web/packages/MetaCycle/vignettes/implementation.html), includding several new sections(**Pros and Cons of meta2d methods**, **Method selection based on the sampling pattern** and **Notes on the Fisher’s method**).
+
+Next, we will try to make the parallel analysis works on the Windows system, and find a better way (beautiful in theory and powerful in practice) of integrating multiple p-values. 
 
 ## Installation
 Use **devtools** to install this version from Github:
