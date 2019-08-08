@@ -374,7 +374,7 @@ runJTK <- function(indata,JTKtime,minper=20,maxper=28, releaseNote=TRUE, para = 
   if ( (max(perTK)*freq != maxper) & (releaseNote) )
   {  cat(c("Warning: the input 'maxper' is not suitable for JTK, it was reset as ", max(perTK)*freq, "\n"));  }
 	##read-in data
-	options(stringsAsFactors=FALSE);
+	#options(stringsAsFactors=FALSE);
 	data <- indata;
 	idorder <- dimnames(data)[[1]];
 	outID <- as.character(data[,1]);           
