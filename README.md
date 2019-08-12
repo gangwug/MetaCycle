@@ -13,7 +13,17 @@ MetaCycle 1.2.0 was released in [CRAN](https://cran.r-project.org/web/packages/M
 
 We prepared the new [Vignettes](https://cran.r-project.org/web/packages/MetaCycle/vignettes/implementation.html), includding several new sections(**Pros and Cons of meta2d methods**, **Method selection based on the sampling pattern** and **Notes on the Fisher’s method**).
 
-Next, we will try to make the parallel analysis works on the Windows system, and find a better way (beautiful in theory and powerful in practice) of integrating multiple p-values. 
+Next, we will try to make the parallel analysis works on the Windows system, and find a better way (beautiful in theory and powerful in practice) of integrating multiple p-values.
+
+## Reported issues from MetaCycle users and will be fixed in the next version
+Input and output data frame instead of using file name. Currently, it needs to set value to 'infile' and 'filestyle'. This is not user-friendly.
+
+
+```r
+testD <- read.csv("example.csv")
+timev <- 1:10
+outD <- meta2d(infile="csv", filestyle="csv", timepoints = timev, outputFile=FALSE, nDF=testD)
+```
 
 ## Installation
 Use **devtools** to install this version from Github:
