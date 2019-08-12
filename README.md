@@ -8,27 +8,6 @@ which incorporates [ARSER](https://github.com/cauyrd/ARSER), [JTK_CYCLE](http://
 time-series datasets with individual information, **meta3d** is suggested, which takes use of any one of these three methods to 
 analyze time-series data individual by individual and gives out integrated values based on analysis result of each individual.
 
-## Update news
-MetaCycle 1.2.0 was released in [CRAN](https://cran.r-project.org/web/packages/MetaCycle/index.html), which supports parallel analysis (except on Windows system), and can accept input data frame in addition to input files.
-
-We prepared the new [Vignettes](https://cran.r-project.org/web/packages/MetaCycle/vignettes/implementation.html), includding several new sections(**Pros and Cons of meta2d methods**, **Method selection based on the sampling pattern** and **Notes on the Fisher’s method**).
-
-Next, we will try to make the parallel analysis works on the Windows system, and find a better way (beautiful in theory and powerful in practice) of integrating multiple p-values.
-
-## Reported issues from MetaCycle users and will be fixed in the next version
-### Input and output data frame instead of using file name. 
-
-Currently, it needs to set value to 'infile' and 'filestyle'. This is not user-friendly.
-
-```r
-testD <- read.csv("example.csv")
-timev <- 1:10
-outD <- meta2d(infile="csv", filestyle="csv", timepoints = timev, outputFile=FALSE, nDF=testD)
-```
-### A better demo file introducing about how to use MetaCycle, especially for meta3d. Current introduction file mainly mentions about the design of MetaCycle. 
-
-Currently, there is a workshop folder introducting how to use meta2d step by step (https://github.com/gangwug/SRBR_SMTSAworkshop). The shinny app of meta2d is on Github (https://github.com/gangwug/MetaCycleApp). We also encourge users to post experience of using MetaCycle in their native language. For example, Jiaxuan shared her experience in Chinese (https://abego.cn/2019/05/31/the-rule-of-gene-expression-in-the-day-and-nigth/). 
-
 ## Installation
 Use **devtools** to install this version from Github:
 
@@ -49,3 +28,24 @@ library(MetaCycle)
 
 ## License
 This package is free and open source software, licensed under GPL(>= 2).
+
+## Update news
+MetaCycle 1.2.0 was released in [CRAN](https://cran.r-project.org/web/packages/MetaCycle/index.html), which supports parallel analysis (except on Windows system), and can accept input data frame in addition to input files.
+
+We prepared the new [Vignettes](https://cran.r-project.org/web/packages/MetaCycle/vignettes/implementation.html), includding several new sections(**Pros and Cons of meta2d methods**, **Method selection based on the sampling pattern** and **Notes on the Fisher’s method**).
+
+Next, we will try to make the parallel analysis works on the Windows system, and find a better way (beautiful in theory and powerful in practice) of integrating multiple p-values.
+
+## Reported issues from MetaCycle users and will be fixed in the next version
+### Input and output data frame instead of using file name. 
+
+Currently, it needs to set value to 'infile' and 'filestyle'. This is not user-friendly.
+
+```r
+testD <- read.csv("example.csv")
+timev <- 1:10
+outD <- meta2d(infile="csv", filestyle="csv", timepoints = timev, outputFile=FALSE, nDF=testD)
+```
+### A better demo file introducing about how to use MetaCycle, especially for meta3d. Current introduction file mainly mentions about the design of MetaCycle. 
+
+Currently, there is a workshop folder introducting how to use meta2d step by step (https://github.com/gangwug/SRBR_SMTSAworkshop). The shinny app of meta2d is on Github (https://github.com/gangwug/MetaCycleApp). We also encourge users to post experience of using MetaCycle in their native language. For example, Jiaxuan shared her experience in Chinese (https://abego.cn/2019/05/31/the-rule-of-gene-expression-in-the-day-and-nigth/). 
