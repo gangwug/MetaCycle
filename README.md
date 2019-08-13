@@ -36,7 +36,7 @@ We prepared the new [Vignettes](https://cran.r-project.org/web/packages/MetaCycl
 
 Next, we will try to make the parallel analysis works on the Windows system, and find a better way (beautiful in theory and powerful in practice) of integrating multiple p-values.
 
-## Reported issues from MetaCycle users and will be fixed in the next version
+## Reported issues from MetaCycle users
 ### Input and output data frame instead of using file name. 
 
 Currently, it needs to set value to 'infile' and 'filestyle'. This is not user-friendly.
@@ -49,3 +49,5 @@ outD <- meta2d(infile="csv", filestyle="csv", timepoints = timev, outputFile=FAL
 ### A better demo file introducing about how to use MetaCycle, especially for meta3d. Current introduction file mainly mentions about the design of MetaCycle. 
 
 Currently, there is a workshop folder introducting how to use meta2d step by step (https://github.com/gangwug/SRBR_SMTSAworkshop). The shinny app of meta2d is on Github (https://github.com/gangwug/MetaCycleApp). We also encourge users to post experience of using MetaCycle in their native language. For example, Jiaxuan shared her experience in Chinese (https://abego.cn/2019/05/31/the-rule-of-gene-expression-in-the-day-and-nigth/). 
+
+### The above issues will be fixed in the next version of MetaCycle.
