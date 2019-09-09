@@ -36,6 +36,13 @@ We prepared the new [Vignettes](https://cran.r-project.org/web/packages/MetaCycl
 
 Next, we will try to make the parallel analysis works on the Windows system, and find a better way (beautiful in theory and powerful in practice) of integrating multiple p-values.
 
+## Important note
+If using MetaCycle on both the newest R version (3.6.1 released on 2019-07-05) and older R versions, please run the below command before running MetaCycle when ARSER is selected. There were some changes in R 3.6.0 related to how sample() works, which will affect the ARSER performance. Please be cautious that there may be minor differences for the output results of MetaCycle running on R 3.6.1 comparing to older R versions.
+
+```r
+RNGkind(sample.kind = "Rounding")
+```
+
 ## Reported issues from MetaCycle users
 ### Input and output data frame instead of using file name. 
 
