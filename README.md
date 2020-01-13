@@ -44,7 +44,7 @@ We prepared the new [Vignettes](https://cran.r-project.org/web/packages/MetaCycl
 Next, we will try to make the parallel analysis works on the Windows system, and find a better way (beautiful in theory and powerful in practice) of integrating multiple p-values.
 
 ## Reported issues from MetaCycle users
-### Input and output data frame instead of using file name. 
+### Input and output data frame (tibble data does not work well in this version) instead of using file name. 
 
 Currently, it needs to set value to 'infile' and 'filestyle'. This is not user-friendly.
 
