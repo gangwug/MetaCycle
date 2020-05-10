@@ -46,7 +46,7 @@ Next, we will try to make the parallel analysis works on the Windows system, and
 ## Reported issues from MetaCycle users
 ### Input and output data frame (tibble data does not work well in this version) instead of using file name. 
 
-Currently, it needs to set value to 'infile' and 'filestyle'. This is not user-friendly.
+Currently, it needs to set value to 'infile' and 'filestyle'. The 'timepoints' need to be a numeric vector instead of 'Line1'. This is not user-friendly.
 
 ```r
 testD <- read.csv("example.csv")
