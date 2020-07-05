@@ -53,6 +53,9 @@ testD <- read.csv("example.csv")
 timev <- 1:10
 outD <- meta2d(infile="csv", filestyle="csv", timepoints = timev, outputFile=FALSE, nDF=testD)
 ```
+
+### JTK does not support non-integer interval. E.g. needs to transform 0.5h to 30 minutes for running JTK.  
+
 ### A better demo file introducing about how to use MetaCycle, especially for meta3d. Current introduction file mainly mentions about the design of MetaCycle. 
 
 Currently, there is a workshop folder introducting how to use meta2d step by step (https://github.com/gangwug/SRBR_SMTSAworkshop). The shinny app of meta2d is on Github (https://github.com/gangwug/MetaCycleApp). We also encourge users to post experience of using MetaCycle in their native language. For example, Jiaxuan shared her experience in Chinese (https://abego.cn/2019/05/31/the-rule-of-gene-expression-in-the-day-and-nigth/). 
