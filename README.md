@@ -54,7 +54,7 @@ timev <- 1:10
 outD <- meta2d(infile="csv", filestyle="csv", timepoints = timev, outputFile=FALSE, nDF=testD)
 ```
 
-### JTK does not support non-integer interval. E.g. needs to transform 0.5h to 30 minutes for running JTK.  
+### JTK does not support non-integer interval. E.g. needs to transform 0.5h to 30 minutes for running JTK. Current JTK version allows maximum 170 time points calculating the exact p-value. If more than 170 input time points, JTK will release an error. 
 
 ### A better demo file introducing about how to use MetaCycle, especially for meta3d. Current introduction file mainly mentions about the design of MetaCycle. 
 
