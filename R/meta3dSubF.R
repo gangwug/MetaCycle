@@ -254,6 +254,12 @@ getweightM <- function(pvalueM)
                                  ##when Pvalue smaller than 1e-50, set it as 1e-50; different with 'meta2d' (z[!z] <- 1e-300)
                                  z[z < 1e-50] <- 1e-50
                                  z <- -log10(z);
+	                         ##modify start: adjust the weighted values of 'p-value = 1' to a non-zero weit value; if all p-values are 1, weit values as 0 will cause some issues.
+	                         zeroIndex <- which(z == 0);
+	                         if (length(zeroIndex) > 0) {
+					 z[zeroIndex] = 1e-20;
+			         }
+	                         ##modify end: 2020-10-26
                                  return(z);
                                  });
     weitM <- t(weitM);
