@@ -44,7 +44,7 @@ We prepared the new [Vignettes](https://cran.r-project.org/web/packages/MetaCycl
 Next, we will try to make the parallel analysis works on the Windows system, and find a better way (beautiful in theory and powerful in practice) of integrating multiple p-values.
 
 ## Reported issues from MetaCycle users
-### Input and output data frame (tibble data does not work well in this version) instead of using file name. 
+#### Input and output data frame (tibble data does not work well in this version) instead of using file name. 
 
 Currently, it needs to set value to 'infile' and 'filestyle'. The 'timepoints' need to be a numeric vector instead of 'Line1'. This is not user-friendly.
 
@@ -54,10 +54,12 @@ timev <- 1:10
 outD <- meta2d(infile="csv", filestyle="csv", timepoints = timev, outputFile=FALSE, nDF=testD)
 ```
 
-### JTK does not support non-integer interval. E.g. needs to transform 0.5h to 30 minutes for running JTK. Current JTK version allows maximum 170 time points calculating the exact p-value. If more than 170 input time points, JTK will release an error. 
+#### JTK does not support non-integer interval. E.g. needs to transform 0.5h to 30 minutes for running JTK. Current JTK version allows maximum 170 time points calculating the exact p-value. If more than 170 input time points, JTK will release an error. 
 
-### A better demo file introducing about how to use MetaCycle, especially for meta3d. Current introduction file mainly mentions about the design of MetaCycle. 
+#### If p-value are 1 for all subjects, the output value will be NA from meta3d if using 'weightedMethod=TRUE'. 'weightedMethod=FALSE' is suggested. 
+
+#### A better demo file introducing about how to use MetaCycle, especially for meta3d. Current introduction file mainly mentions about the design of MetaCycle. 
 
 Currently, there is a workshop folder introducting how to use meta2d step by step (https://github.com/gangwug/SRBR_SMTSAworkshop). The shinny app of meta2d is on Github (https://github.com/gangwug/MetaCycleApp). We also encourge users to post experience of using MetaCycle in their native language. For example, Jiaxuan shared her experience in Chinese (https://abego.cn/2019/05/31/the-rule-of-gene-expression-in-the-day-and-nigth/). 
 
-### The above issues will be fixed in the next version of MetaCycle.
+## The above issues will be fixed in the next version of MetaCycle.
