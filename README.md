@@ -51,7 +51,7 @@ Currently, it needs to set value to 'infile' and 'filestyle'. The 'timepoints' n
 ```r
 testD <- read.csv("example.csv")
 timev <- 1:10
-outD <- meta2d(infile="csv", filestyle="csv", timepoints = timev, outputFile=FALSE, nDF=testD)
+outD <- meta2d(infile="csv", filestyle="csv", timepoints = timev, outputFile=FALSE, inDF=testD)
 ```
 
 #### JTK does not support non-integer interval. E.g. needs to transform 0.5h to 30 minutes for running JTK. Current JTK version allows maximum 170 time points calculating the exact p-value. If more than 170 input time points, JTK will release an error. 
