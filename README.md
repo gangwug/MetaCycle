@@ -49,8 +49,10 @@ Next, we will try to make the parallel analysis works on the Windows system, and
 Currently, it needs to set value to 'infile' and 'filestyle'. The 'timepoints' need to be a numeric vector instead of 'Line1'. This is not user-friendly.
 
 ```r
+library(MetaCycle)
+write.csv(cycSimu4h2d, file="example.csv", row.names=FALSE)
 testD <- read.csv("example.csv")
-timev <- 1:10
+timev <- seq(0,44,by=4)
 outD <- meta2d(infile="csv", filestyle="csv", timepoints = timev, outputFile=FALSE, inDF=testD)
 ```
 
