@@ -1,9 +1,9 @@
 This repository contains the ongoing development version of MetaCycle. 
 
 ## Introduction
-MetaCycle is an R package for evaluating periodicity in large scale time-series datasets. This package provides two functions-
+MetaCycle (Wu G et al., Bioinformatics, 2016) is an R package for evaluating periodicity in large scale time-series datasets. This package provides two functions-
 **meta2d** and **meta3d**. For analyzing time-series datasets without individual information, **meta2d** is suggested, 
-which incorporates ARSER(Yang R and Su Z, Bioinformatics, 2010), JTK_CYCLE(Hughes ME et al., 2010, J Biol Rhythms) and
+which incorporates ARSER(Yang R and Su Z, Bioinformatics, 2010), JTK_CYCLE(Hughes ME et al., J Biol Rhythms, 2010) and
 Lomb-Scargle(Glynn EF, et al., Bioinformatics, 2006) in the detection of interested rhythms. For analyzing 
 time-series datasets with individual information, **meta3d** is suggested, which takes use of any one of these three methods to 
 analyze time-series data individual by individual and gives out integrated values based on analysis result of each individual.
