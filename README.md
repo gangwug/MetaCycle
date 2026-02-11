@@ -3,8 +3,8 @@ This repository contains the ongoing development version of MetaCycle.
 ## Introduction
 MetaCycle is an R package for evaluating periodicity in large scale time-series datasets. This package provides two functions-
 **meta2d** and **meta3d**. For analyzing time-series datasets without individual information, **meta2d** is suggested, 
-which incorporates [ARSER](https://github.com/cauyrd/ARSER), [JTK_CYCLE](http://openwetware.org/wiki/HughesLab:JTK_Cycle) and
-[Lomb-Scargle](http://research.stowers-institute.org/efg/2005/LombScargle/) in the detection of interested rhythms. For analyzing 
+which incorporates ARSER(Yang R and Su Z, Bioinformatics, 2010), JTK_CYCLE(Hughes ME et al., 2010, J Biol Rhythms) and
+Lomb-Scargle(Glynn EF, et al., Bioinformatics, 2006) in the detection of interested rhythms. For analyzing 
 time-series datasets with individual information, **meta3d** is suggested, which takes use of any one of these three methods to 
 analyze time-series data individual by individual and gives out integrated values based on analysis result of each individual.
 
@@ -37,7 +37,7 @@ RNGkind(sample.kind = "Rounding")
 ```
 
 ## Update news
-MetaCycle 1.2.0 was released in [CRAN](https://cran.r-project.org/web/packages/MetaCycle/index.html), which supports parallel analysis (except on Windows system), and can accept input data frame in addition to input files.
+MetaCycle 1.2.1 was released in [CRAN](https://cran.r-project.org/web/packages/MetaCycle/index.html), which supports parallel analysis (except on Windows system), and can accept input data frame in addition to input files.
 
 We prepared the new [Vignettes](https://cran.r-project.org/web/packages/MetaCycle/vignettes/implementation.html), includding several new sections(**Pros and Cons of meta2d methods**, **Method selection based on the sampling pattern** and **Notes on the Fisher’s method**).
 
@@ -64,4 +64,3 @@ outD <- meta2d(infile="csv", filestyle="csv", timepoints = timev, outputFile=FAL
 
 Currently, there is a workshop folder introducting how to use meta2d step by step (https://github.com/gangwug/SRBR_SMTSAworkshop). The shinny app of meta2d is on Github (https://github.com/gangwug/MetaCycleApp). We also encourge users to post experience of using MetaCycle in their native language. For example, Jiaxuan shared her experience in Chinese (https://abego.cn/2019/05/31/the-rule-of-gene-expression-in-the-day-and-nigth/). 
 
-## The above issues will be fixed in the next version of MetaCycle.
